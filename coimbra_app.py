@@ -8,12 +8,6 @@ st.sidebar.image: st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.web
 st.sidebar.title("Coimbra Interactive Map")
 page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
-# Display the appropriate logo based on the selected theme
-if theme == "Light":
-    st.image(light_mode_logo, width=200)
-else:
-    st.image(dark_mode_logo, width=200)
-    
 # Function to process each sheet in the Excel file
 def process_sheet(xls, sheet_name):
     df = pd.read_excel(xls, sheet_name=sheet_name, skiprows=2)
