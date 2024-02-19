@@ -3,6 +3,21 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 
+# Assume these are the paths or URLs to your logos
+light_mode_logo = "https://i.postimg.cc/hjT72Vcx/logo-black.webp"
+dark_mode_logo = "https://i.postimg.cc/V6LFT7ZM/logo-white.png"
+
+# Sidebar for theme selection
+st.sidebar.title("Menu")
+theme = st.sidebar.radio("Select Theme", ["Light", "Dark"])
+page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
+
+# Display the appropriate logo based on the selected theme
+if theme == "Light":
+    st.image(light_mode_logo, width=200)
+else:
+    st.image(dark_mode_logo, width=200)
+    
 # Function to process each sheet in the Excel file
 def process_sheet(xls, sheet_name):
     df = pd.read_excel(xls, sheet_name=sheet_name, skiprows=2)
