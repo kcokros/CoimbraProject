@@ -3,11 +3,6 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 
-# Sidebar for theme selection
-st.sidebar.image: st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
-st.sidebar.title("Coimbra Interactive Map")
-page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
-
 # Function to process each sheet in the Excel file
 def process_sheet(xls, sheet_name):
     df = pd.read_excel(xls, sheet_name=sheet_name, skiprows=2)
@@ -26,6 +21,7 @@ def to_csv(df):
     return output
 
 # Streamlit app layout
+st.sidebar.image: st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 st.sidebar.title("Menu")
 page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
@@ -54,6 +50,10 @@ if page == "File Processor":
 elif page == "Interactive Map":
     st.title("Interactive Map")
     st.write("Interactive Map will be implemented here.")
+
+elif page == "Forecast":
+    st.title("Forecast")
+    st.write("Forecast will be implemented here.")
 
 elif page == "Forecast":
     st.title("Forecast")
