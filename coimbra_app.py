@@ -3,13 +3,9 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 
-# Assume these are the paths or URLs to your logos
-light_mode_logo = "https://i.postimg.cc/hjT72Vcx/logo-black.webp"
-dark_mode_logo = "https://i.postimg.cc/V6LFT7ZM/logo-white.png"
-
 # Sidebar for theme selection
-st.sidebar.title("Menu")
-theme = st.sidebar.radio("Select Theme", ["Light", "Dark"])
+st.sidebar.image: st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
+st.sidebar.title("Coimbra Interactive Map")
 page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
 # Display the appropriate logo based on the selected theme
