@@ -1,5 +1,7 @@
 streamlit
 pandas
+geopandas
+folium
 numpy
 openpyxl
 matplotlib
