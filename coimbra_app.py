@@ -3,8 +3,10 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 import folium
-from streamlit_folium import folium_static
+from folium.features import GeoJsonTooltip
+from streamlit_folium import folium_static, st_folium
 from io import BytesIO
+from folium.plugins import FloatImage
 
 # Function to process each sheet in the Excel file
 def process_sheet(xls, sheet_name):
@@ -24,7 +26,7 @@ def to_csv(df):
     return output
 
 # Streamlit app layout
-st.sidebar.image: st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
+st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 st.sidebar.title("Coimbra Interactive Map")
 page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
@@ -49,39 +51,95 @@ if page == "File Processor":
                 file_name=f"{sheet_name}.csv",
                 mime='text/csv',
             )
-
+##############################################################################################
 elif page == "Interactive Map":
     st.title("Interactive Map")
-# Load the shapefile using Geopandas
-gdf = gpd.read_file('./maps/AreasEdificadas2018.shp')
 
-# Check the unique categories in the 'TIPO_p' column
-categories = gdf['TIPO_p'].unique()
+    # Function to calculate quantile bins for automated binning
+    def calculate_quantile_bins(data, num_bins=5):
+        quantiles = [i / num_bins for i in range(1, num_bins)]
+        bin_edges = list(data.quantile(quantiles))
+        min_edge, max_edge = data.min(), data.max()
+        bin_edges = [min_edge] + bin_edges + [max_edge]
+        return bin_edges
 
-# Sidebar filter for categories
-selected_category = st.sidebar.selectbox('Select a Category:', categories)
+    # Load and process the shapefiles/data
+    choropleth_gdf = gpd.read_file('./maps/municipal.shp')  # Adjust path as necessary
+    choropleth_gdf = choropleth_gdf.to_crs(epsg=4326)
 
-# Filter the GeoDataFrame based on the selected category from the sidebar
-filtered_gdf = gdf[gdf['TIPO_p'] == selected_category]
+    area_type_gdf = gpd.read_file('./maps/AreasEdificadas2018.shp')
+    area_type_gdf = area_type_gdf.set_crs(epsg=3763)
+    area_type_gdf = area_type_gdf.to_crs(epsg=4326)
 
-# Create a Folium map object centered on the filtered data
-m = folium.Map(location=[filtered_gdf.geometry.centroid.y.mean(), 
-                         filtered_gdf.geometry.centroid.x.mean()],
-               zoom_start=12)
+    # Create a mapping from 'TIPO_p' numerical values to human-readable labels
+    tipo_p_labels = {
+        1: "Residential (>= 10 Buildings)",
+        2: "Residential scattered/isolated",
+        3: "Non-Residential"
+    }
 
-# Add the filtered shapefile to the map using GeoJson
-folium.GeoJson(
-    filtered_gdf,
-    name='geojson',
-    tooltip=folium.GeoJsonTooltip(fields=['TIPO_p'], labels=True)
-).add_to(m)
+    # Map the 'TIPO_p' values to their labels
+    area_type_gdf['TIPO_p_label'] = area_type_gdf['TIPO_p'].map(tipo_p_labels)
 
-# Add layer control to toggle on/off
-folium.LayerControl().add_to(m)
+    # Define a color for each 'TIPO_p' label
+    tipo_p_colors = {
+        "Residential (>= 10 Buildings)": "red",
+        "Residential scattered/isolated": "orange",
+        "Non-Residential": "purple"
+    }
 
-# Display the map in Streamlit
-folium_static(m)
+    # Sidebar options for Choropleth
+    year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
+    df_path = f'tables/{year}.xlsx'
+    df = pd.read_excel(df_path)
+    column_names = df.columns.tolist()[5:]
+    column_name = st.sidebar.selectbox("Select Column", column_names)
 
+    merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
+    merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
+    merged[column_name].fillna(0, inplace=True)
+    bin_edges = calculate_quantile_bins(merged[column_name])
+
+    m = folium.Map(location=[39.5, -8.0], zoom_start=7, tiles='Stadia.AlidadeSmoothDark')
+
+    folium.Choropleth(
+        geo_data=merged,
+        data=merged,
+        columns=['NAME_2_cor', column_name],
+        key_on='feature.properties.NAME_2_cor',
+        fill_color='YlGn',
+        fill_opacity=0.4,
+        line_opacity=0.2,
+        legend_name=f'{column_name} in {year}',
+        bins=bin_edges,
+        reset=True
+    ).add_to(m)
+
+    # Sidebar options for Area Type Map with no default selection
+    st.sidebar.markdown("## Coimbra Region-only Area Options")
+    tipo_p_options = area_type_gdf['TIPO_p_label'].unique()
+    selected_tipo_p = st.sidebar.multiselect("Select Residential Density", tipo_p_options, default=[])
+
+    # Filter based on selected TIPO_p labels
+    filtered_area_type_gdf = area_type_gdf[area_type_gdf['TIPO_p_label'].isin(selected_tipo_p)]
+
+    # Adding Area Type GeoJSON on top of the Choropleth Map
+    if not filtered_area_type_gdf.empty:
+        folium.GeoJson(
+            filtered_area_type_gdf,
+            style_function=lambda feature: {
+                'fillColor': tipo_p_colors[feature['properties']['TIPO_p_label']],
+                'color': 'black',
+                'weight': 0,
+                'fillOpacity': 0.6
+            },
+            tooltip=folium.GeoJsonTooltip(fields=['TIPO_p_label'], aliases=['Area Type:'])
+        ).add_to(m)
+
+    # Display the map
+    st_folium(m, width=900, height=700)
+
+
+##############################################################################################
 elif page == "Forecast":
     st.title("Forecast")
-    st.write("Forecast will be implemented here.")
