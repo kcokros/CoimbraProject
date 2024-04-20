@@ -58,6 +58,7 @@ if page == "File Processor":
 elif page == "Interactive Map":
     st.title("Interactive Map")
 
+    # Function to load and process data from Excel files
     def load_and_process_data(file_path, language='English'):
         try:
             df = pd.read_excel(file_path)
@@ -71,34 +72,18 @@ elif page == "Interactive Map":
         except Exception as e:
             st.error(f"Failed to load or process the file: {e}")
             return pd.DataFrame(), [], []
-    
-    # Function to calculate quantile bins for automated binning
-    def calculate_quantile_bins(data, num_bins=5):
-        quantiles = [i / num_bins for i in range(1, num_bins)]
-        bin_edges = list(data.quantile(quantiles))
-        min_edge, max_edge = data.min(), data.max()
-        bin_edges = [min_edge] + bin_edges + [max_edge]
-        return bin_edges
 
     # Load and process the shapefiles/data
-    choropleth_gdf = gpd.read_file('./maps/municipal.shp')  # Adjust path as necessary
-    choropleth_gdf = choropleth_gdf.to_crs(epsg=4326)
+    choropleth_gdf = gpd.read_file('./maps/municipal.shp').to_crs(epsg=4326)
+    area_type_gdf = gpd.read_file('./maps/AreasEdificadas2018.shp').set_crs(epsg=3763).to_crs(epsg=4326)
 
-    area_type_gdf = gpd.read_file('./maps/AreasEdificadas2018.shp')
-    area_type_gdf = area_type_gdf.set_crs(epsg=3763)
-    area_type_gdf = area_type_gdf.to_crs(epsg=4326)
-
-    # Create a mapping from 'TIPO_p' numerical values to human-readable labels
+    # Define labels and colors for mapping
     tipo_p_labels = {
         1: "Residential (>= 10 Buildings)",
         2: "Residential scattered/isolated",
         3: "Non-Residential"
     }
-
-    # Map the 'TIPO_p' values to their labels
     area_type_gdf['TIPO_p_label'] = area_type_gdf['TIPO_p'].map(tipo_p_labels)
-
-    # Define a color for each 'TIPO_p' label
     tipo_p_colors = {
         "Residential (>= 10 Buildings)": "red",
         "Residential scattered/isolated": "orange",
@@ -108,17 +93,51 @@ elif page == "Interactive Map":
     # Sidebar options for Choropleth
     year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
     df_path = f'tables/{year}.xlsx'
-    df = pd.read_excel(df_path)
     df, eng_columns, pt_columns = load_and_process_data(df_path, language)
     column_names = eng_columns if language == 'English' else pt_columns
-    column_name = st.sidebar.selectbox("Select Column", column_names[5:]) 
+    column_name = st.sidebar.selectbox("Select Column", column_names[5:])  # Assuming the first 5 columns are metadata or not required
 
-    merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
-    merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
-    merged[column_name].fillna(0, inplace=True)
-    bin_edges = calculate_quantile_bins(merged[column_name])
+    # Attempt to merge and catch any KeyError
+    try:
+        merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
+        merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce').fillna(0)
+        bin_edges = calculate_quantile_bins(merged[column_name])
 
-    m = folium.Map(location=[39.5, -8.0], zoom_start=7)
+        m = folium.Map(location=[39.5, -8.0], zoom_start=7)
+        folium.Choropleth(
+            geo_data=merged,
+            data=merged,
+            columns=['NAME_2_cor', column_name],
+            key_on='feature.properties.NAME_2_cor',
+            fill_color='YlGn',
+            fill_opacity=0.4,
+            line_opacity=0.2,
+            legend_name=f'{column_name} in {year}',
+            bins=bin_edges,
+            reset=True
+        ).add_to(m)
+        
+        # Add GeoJson for selected area types if any
+        selected_tipo_p = st.sidebar.multiselect("Select Residential Density", list(tipo_p_labels.values()), default=[])
+        filtered_area_type_gdf = area_type_gdf[area_type_gdf['TIPO_p_label'].isin(selected_tipo_p)]
+        if not filtered_area_type_gdf.empty:
+            folium.GeoJson(
+                filtered_area_type_gdf,
+                style_function=lambda feature: {
+                    'fillColor': tipo_p_colors[feature['properties']['TIPO_p_label']],
+                    'color': 'black',
+                    'weight': 0,
+                    'fillOpacity': 0.6
+                },
+                tooltip=folium.GeoJsonTooltip(fields=['TIPO_p_label'], aliases=['Area Type:'])
+            ).add_to(m)
+
+        # Display the map
+        st_folium(m, width=900, height=700)
+    except KeyError as e:
+        st.error(f"Failed to find the key in the DataFrame: {str(e)}")
+        st.write("Available columns in choropleth_gdf:", choropleth_gdf.columns.tolist())
+        st.write("Available columns in df:", df.columns.tolist())
 
     folium.Choropleth(
         geo_data=merged,
