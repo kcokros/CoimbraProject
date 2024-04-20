@@ -92,11 +92,12 @@ elif page == "Interactive Map":
         "Non-Residential": "purple"
     }
 
-    # Sidebar options for Choropleth
+    # Load data for the selected year using the language setting
     year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
     df_path = f'tables/{year}.xlsx'
-    df = pd.read_excel(df_path)
-    column_names = df.columns.tolist()[5:]
+    xls = pd.ExcelFile(df_path)
+    df = process_sheet(xls, xls.sheet_names[0], language=language)  # Assuming there is only one sheet per file
+    column_names = df.columns.tolist()[5:]  # Adjust index if necessary
     column_name = st.sidebar.selectbox("Select Column", column_names)
 
     merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
