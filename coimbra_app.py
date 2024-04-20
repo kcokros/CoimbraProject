@@ -73,6 +73,15 @@ if page == "File Processor":
 elif page == "Interactive Map":
     st.title("Interactive Map")
 
+    # Sidebar options for Choropleth
+    year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
+    df_path = f'tables/{year}.xlsx'
+    df = process_sheet(df_path, language)  # Process the sheet based on selected language
+    
+    # Extract column names after processing the data and add selectbox to sidebar
+    column_names = df.columns.tolist()[4:]  # Adjust the index as necessary
+    column_name = st.sidebar.selectbox("Select Column", column_names)
+
     # Function to calculate quantile bins for automated binning
     def calculate_quantile_bins(data, num_bins=5):
         quantiles = [i / num_bins for i in range(1, num_bins)]
@@ -105,11 +114,6 @@ elif page == "Interactive Map":
         "Residential scattered/isolated": "orange",
         "Non-Residential": "purple"
     }
-
-    # Sidebar options for Choropleth
-    year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
-    df_path = f'tables/{year}.xlsx'
-    df = process_sheet(df_path, language=language)  # Process the sheet based on selected language
     
     merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
     merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
