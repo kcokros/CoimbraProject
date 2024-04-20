@@ -98,6 +98,7 @@ elif page == "Interactive Map":
     column_name = st.sidebar.selectbox("Select Column", column_names[5:])  # Assuming the first 5 columns are metadata or not required
 
     # Attempt to merge and catch any KeyError
+    df.rename(columns={'Portugal': 'Region'}, inplace=True)
     try:
         merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
         merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce').fillna(0)
