@@ -9,22 +9,39 @@ from io import BytesIO
 from folium.plugins import FloatImage
 
 # Function to process each sheet in the Excel file based on language selection
+import pandas as pd
+import streamlit as st
+
 def process_sheet(xls, sheet_name, language='English'):
+    # Read the Excel file into a DataFrame
     df = pd.read_excel(xls, sheet_name=sheet_name)
     
-    # Choose column names based on language
+    # Set the column names based on the selected language
     if language == 'English':
-        new_columns = df.iloc[0]  # English names are in the first row
+        new_columns = df.iloc[0]  # Assume English names are in the first row
     else:
-        new_columns = df.iloc[-1]  # Portuguese names are in the last row
+        new_columns = df.iloc[-1]  # Assume Portuguese names are in the last row
 
-    # Set new column names
-    df.columns = new_columns
-    df = df[1:-1]  # Drop the header and footer rows that contain column names
+    df.columns = new_columns  # Set the column names
+    df = df[1:-1]  # Remove the first and last row which contain the language headers
+
+    # Keep columns before the first all-NaN column
+    df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
+    # Drop all-NaN columns
+    df.dropna(axis=1, how='all', inplace=True)
     
-    # Drop columns where all values are NaN
-    df = df.loc[:, df.columns.notnull()]
-    df = df.dropna(axis=1, how='all')
+    return df
+
+# Select the year and load the corresponding data
+year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
+df_path = f'tables/{year}.xlsx'
+df = process_sheet(df_path, language)
+
+# Assuming that the fifth column onwards contains the data of interest
+column_names = df.columns.tolist()[4:]
+# Update the Streamlit widget for column selection with the correct language
+column_name = st.sidebar.selectbox("Select Column", column_names)
+
     
     return df
 
@@ -42,8 +59,9 @@ def to_csv(df):
     return output
 
 # Streamlit app layout
+# Select the language
+language = st.sidebar.selectbox("Choose Language", ['English', 'Portuguese'])
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
-language = st.sidebar.selectbox("Choose Language", ["English", "Portuguese"])
 st.sidebar.title("Coimbra Interactive Map")
 page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
