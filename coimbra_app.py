@@ -9,31 +9,18 @@ from io import BytesIO
 from folium.plugins import FloatImage
 
 # Function to process each sheet in the Excel file based on language selection
-import pandas as pd
-import streamlit as st
-
 def process_sheet(xls, sheet_name, language='English'):
-    # Read the Excel file into a DataFrame
     df = pd.read_excel(xls, sheet_name=sheet_name)
-    # Set the column names based on the selected language
     if language == 'English':
-        new_columns = df.iloc[0]  # Assume English names are in the first row
+        new_columns = df.iloc[0]  # English names are in the first row
     else:
-        new_columns = df.iloc[-1]  # Assume Portuguese names are in the last row
-    df.columns = new_columns  # Set the column names
-    df = df[1:-1]  # Remove the first and last row which contain the language headers
-    # Keep columns before the first all-NaN column
+        new_columns = df.iloc[-1]  # Portuguese names are in the last row
+    df.columns = new_columns
+    df = df[1:-1]  # Drop the rows with both English and Portuguese names
     df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
-    # Drop all-NaN columns
     df.dropna(axis=1, how='all', inplace=True)
     return df
 
-# Load a specific year's data in a Streamlit app
-def load_data(year):
-    df_path = f'tables/{year}.xlsx'
-    df = pd.read_excel(df_path)
-    return df
-    
 # Function to save dataframe to a CSV and return it as a download link
 def to_csv(df):
     output = BytesIO()
@@ -42,9 +29,8 @@ def to_csv(df):
     return output
 
 # Streamlit app layout
-# Select the language
-language = st.sidebar.selectbox("Choose Language", ['English', 'Portuguese'])
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
+language = st.sidebar.selectbox("Choose Language", ["English", "Portuguese"])
 st.sidebar.title("Coimbra Interactive Map")
 page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
@@ -57,7 +43,7 @@ if page == "File Processor":
         xls = pd.ExcelFile(uploaded_file)
 
         for sheet_name in xls.sheet_names:
-            df = process_sheet(xls, sheet_name, language)
+            df = process_sheet(xls, sheet_name)
             st.write(f"Preview of {sheet_name}:")
             st.dataframe(df.head())
 
@@ -72,19 +58,6 @@ if page == "File Processor":
 ##############################################################################################
 elif page == "Interactive Map":
     st.title("Interactive Map")
-
-    # Sidebar options for Choropleth
-    year = st.sidebar.slider("Select Year", 2021, 2022)
-    df_path = f'tables/{year}.xlsx'
-    df = process_sheet(df_path, language)  # Process the sheet based on selected language
-    
-    # Extract column names after processing the data and add selectbox to sidebar
-    column_names = df.columns.tolist()[4:]  # Adjust the index as necessary
-    column_name = st.sidebar.selectbox("Select Column", column_names)
-
-    # Extract column names after processing the data and add selectbox to sidebar
-    column_names = df.columns.tolist()[4:]  # Adjust the index as necessary
-    column_name = st.sidebar.selectbox("Select Column", column_names)
 
     # Function to calculate quantile bins for automated binning
     def calculate_quantile_bins(data, num_bins=5):
@@ -118,7 +91,14 @@ elif page == "Interactive Map":
         "Residential scattered/isolated": "orange",
         "Non-Residential": "purple"
     }
-    
+
+    # Sidebar options for Choropleth
+    year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
+    df_path = f'tables/{year}.xlsx'
+    df = pd.read_excel(df_path)
+    column_names = df.columns.tolist()[5:]
+    column_name = st.sidebar.selectbox("Select Column", column_names)
+
     merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
     merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
     merged[column_name].fillna(0, inplace=True)
