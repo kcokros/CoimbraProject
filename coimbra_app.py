@@ -15,34 +15,17 @@ import streamlit as st
 def process_sheet(xls, sheet_name, language='English'):
     # Read the Excel file into a DataFrame
     df = pd.read_excel(xls, sheet_name=sheet_name)
-    
     # Set the column names based on the selected language
     if language == 'English':
         new_columns = df.iloc[0]  # Assume English names are in the first row
     else:
         new_columns = df.iloc[-1]  # Assume Portuguese names are in the last row
-
     df.columns = new_columns  # Set the column names
     df = df[1:-1]  # Remove the first and last row which contain the language headers
-
     # Keep columns before the first all-NaN column
     df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
     # Drop all-NaN columns
     df.dropna(axis=1, how='all', inplace=True)
-    
-    return df
-
-# Select the year and load the corresponding data
-year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
-df_path = f'tables/{year}.xlsx'
-df = process_sheet(df_path, language)
-
-# Assuming that the fifth column onwards contains the data of interest
-column_names = df.columns.tolist()[4:]
-# Update the Streamlit widget for column selection with the correct language
-column_name = st.sidebar.selectbox("Select Column", column_names)
-
-    
     return df
 
 # Load a specific year's data in a Streamlit app
@@ -74,7 +57,7 @@ if page == "File Processor":
         xls = pd.ExcelFile(uploaded_file)
 
         for sheet_name in xls.sheet_names:
-            df = process_sheet(xls, sheet_name)
+            df = process_sheet(xls, sheet_name, language)
             st.write(f"Preview of {sheet_name}:")
             st.dataframe(df.head())
 
@@ -125,10 +108,9 @@ elif page == "Interactive Map":
 
     # Sidebar options for Choropleth
     year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
-    df = load_data(year)
-    column_names = df.columns.tolist()[5:]
-    column_name = st.sidebar.selectbox("Select Column", column_names)
-
+    df_path = f'tables/{year}.xlsx'
+    df = process_sheet(df_path, language=language)  # Process the sheet based on selected language
+    
     merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
     merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
     merged[column_name].fillna(0, inplace=True)
