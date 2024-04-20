@@ -11,15 +11,14 @@ from folium.plugins import FloatImage
 # Function to process each sheet in the Excel file based on language selection
 def process_sheet(xls, sheet_name, language='English'):
     df = pd.read_excel(xls, sheet_name=sheet_name)
-    if language == 'English':
-        new_columns = df.iloc[0]  # English names are in the first row
-    else:
-        new_columns = df.iloc[-1]  # Portuguese names are in the last row
-    df.columns = new_columns
+    # English names are in the first row, Portuguese in the last row
+    eng_columns = df.iloc[0]
+    pt_columns = df.iloc[-1]
+    df.columns = eng_columns
     df = df[1:-1]  # Drop the rows with both English and Portuguese names
     df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
     df.dropna(axis=1, how='all', inplace=True)
-    return df
+    return df, eng_columns, pt_columns if language == 'English' else pt_columns
 
 # Function to save dataframe to a CSV and return it as a download link
 def to_csv(df):
@@ -29,8 +28,8 @@ def to_csv(df):
     return output
 
 # Streamlit app layout
-st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 language = st.sidebar.selectbox("Choose Language", ["English", "Portuguese"])
+st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 st.sidebar.title("Coimbra Interactive Map")
 page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
@@ -59,6 +58,20 @@ if page == "File Processor":
 elif page == "Interactive Map":
     st.title("Interactive Map")
 
+    def load_and_process_data(file_path, language='English'):
+        try:
+            df = pd.read_excel(file_path)
+            eng_columns = df.iloc[0]  # English names are in the first row
+            pt_columns = df.iloc[-1]  # Portuguese names are in the last row
+            df = df[1:-1]  # Drop the rows with English and Portuguese names
+            df.columns = eng_columns  # Temporarily use English for processing
+            df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
+            df.dropna(axis=1, how='all', inplace=True)
+            return df, eng_columns, pt_columns
+        except Exception as e:
+            st.error(f"Failed to load or process the file: {e}")
+            return pd.DataFrame(), [], []
+    
     # Function to calculate quantile bins for automated binning
     def calculate_quantile_bins(data, num_bins=5):
         quantiles = [i / num_bins for i in range(1, num_bins)]
@@ -96,8 +109,9 @@ elif page == "Interactive Map":
     year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
     df_path = f'tables/{year}.xlsx'
     df = pd.read_excel(df_path)
-    column_names = df.columns.tolist()[5:]
-    column_name = st.sidebar.selectbox("Select Column", column_names)
+    df, eng_columns, pt_columns = load_and_process_data(df_path, language)
+    column_names = eng_columns if language == 'English' else pt_columns
+    column_name = st.sidebar.selectbox("Select Column", column_names[5:]) 
 
     merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
     merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
