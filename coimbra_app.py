@@ -11,16 +11,29 @@ from folium.plugins import FloatImage
 # Function to process each sheet in the Excel file based on language selection
 def process_sheet(xls, sheet_name, language='English'):
     df = pd.read_excel(xls, sheet_name=sheet_name)
+    
+    # Choose column names based on language
     if language == 'English':
         new_columns = df.iloc[0]  # English names are in the first row
     else:
         new_columns = df.iloc[-1]  # Portuguese names are in the last row
+
+    # Set new column names
     df.columns = new_columns
-    df = df[1:-1]  # Drop the rows with both English and Portuguese names
-    df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
-    df.dropna(axis=1, how='all', inplace=True)
+    df = df[1:-1]  # Drop the header and footer rows that contain column names
+    
+    # Drop columns where all values are NaN
+    df = df.loc[:, df.columns.notnull()]
+    df = df.dropna(axis=1, how='all')
+    
     return df
 
+# Load a specific year's data in a Streamlit app
+def load_data(year):
+    df_path = f'tables/{year}.xlsx'
+    df = pd.read_excel(df_path)
+    return df
+    
 # Function to save dataframe to a CSV and return it as a download link
 def to_csv(df):
     output = BytesIO()
@@ -92,12 +105,10 @@ elif page == "Interactive Map":
         "Non-Residential": "purple"
     }
 
-    # Load data for the selected year using the language setting
+    # Sidebar options for Choropleth
     year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
-    df_path = f'tables/{year}.xlsx'
-    xls = pd.ExcelFile(df_path)
-    df = process_sheet(xls, xls.sheet_names[0], language=language)  # Assuming there is only one sheet per file
-    column_names = df.columns.tolist()[5:]  # Adjust index if necessary
+    df = load_data(year)
+    column_names = df.columns.tolist()[5:]
     column_name = st.sidebar.selectbox("Select Column", column_names)
 
     merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
