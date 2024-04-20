@@ -74,10 +74,14 @@ elif page == "Interactive Map":
     st.title("Interactive Map")
 
     # Sidebar options for Choropleth
-    year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
+    year = st.sidebar.slider("Select Year", 2021, 2022)
     df_path = f'tables/{year}.xlsx'
     df = process_sheet(df_path, language)  # Process the sheet based on selected language
     
+    # Extract column names after processing the data and add selectbox to sidebar
+    column_names = df.columns.tolist()[4:]  # Adjust the index as necessary
+    column_name = st.sidebar.selectbox("Select Column", column_names)
+
     # Extract column names after processing the data and add selectbox to sidebar
     column_names = df.columns.tolist()[4:]  # Adjust the index as necessary
     column_name = st.sidebar.selectbox("Select Column", column_names)
