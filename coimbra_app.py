@@ -32,7 +32,7 @@ def to_csv(df):
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 language = st.sidebar.selectbox("Choose Language", ["English", "Portuguese"])
 st.sidebar.title("Coimbra Interactive Map")
-page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
+page = st.sidebar.radio("Select a Page", ["Interactive Map", "Forecast"])
 
 if page == "File Processor":
     st.title("File Processor")
