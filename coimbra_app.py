@@ -8,15 +8,12 @@ from streamlit_folium import folium_static, st_folium
 from io import BytesIO
 from folium.plugins import FloatImage
 
-# Function to process each sheet in the Excel file based on language selection
-def process_sheet(xls, sheet_name, language='English'):
-    df = pd.read_excel(xls, sheet_name=sheet_name)
-    if language == 'English':
-        new_columns = df.iloc[0]  # English names are in the first row
-    else:
-        new_columns = df.iloc[-1]  # Portuguese names are in the last row
+# Function to process each sheet in the Excel file
+def process_sheet(xls, sheet_name):
+    df = pd.read_excel(xls, sheet_name=sheet_name, skiprows=2)
+    new_columns = [f'{col} ({unit})' for col, unit in zip(df.columns, df.iloc[0])]
     df.columns = new_columns
-    df = df[1:-1]  # Drop the rows with both English and Portuguese names
+    df = df[1:]  # Drop the row with measurement units
     df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
     df.dropna(axis=1, how='all', inplace=True)
     return df
@@ -30,9 +27,8 @@ def to_csv(df):
 
 # Streamlit app layout
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
-language = st.sidebar.selectbox("Choose Language", ["English", "Portuguese"])
 st.sidebar.title("Coimbra Interactive Map")
-page = st.sidebar.radio("Select a Page", ["Interactive Map", "Forecast"])
+page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
 
 if page == "File Processor":
     st.title("File Processor")
