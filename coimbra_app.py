@@ -135,6 +135,11 @@ elif page == "Interactive Map":
     # Display the map
     st_folium(m, width=900, height=700)
 
+    # Display corresponding bar chart
+    st.subheader(f'Distribution of {column_name} in {year}')
+    bar_data = merged[[column_name, 'NAME_2_cor']].set_index('NAME_2_cor')
+    st.bar_chart(bar_data)
+
 elif page == "Interactive Map (Alt)":
     st.title("Interactive Map (Alt) using Kepler.gl")
     geojson_path = './maps/CENSUS_LEVEL.geojson'
@@ -142,6 +147,18 @@ elif page == "Interactive Map (Alt)":
     if gdf.crs != "epsg:4326":
         gdf = gdf.to_crs(epsg=4326)
     geojson_data = json.loads(gdf.to_json())
+
+    map_config = {
+        'version': 'v1',
+        'config': {
+            'mapState': {
+                'latitude': 40.2056,
+                'longitude': -8.4196,
+                'zoom': 10
+            }
+        }
+    }
+    
     map_1 = KeplerGl(height=700)
     map_1.add_data(data=geojson_data, name='Census Data')
     with st.container():
