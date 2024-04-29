@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import geopandas as gpd
+import numpy as np
 import folium
 from folium.features import GeoJsonTooltip
 from streamlit_folium import folium_static, st_folium
+from keplergl import KeplerGl
+import json
 from io import BytesIO
 from folium.plugins import FloatImage
 
@@ -28,22 +30,17 @@ def to_csv(df):
 # Streamlit app layout
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 st.sidebar.title("Coimbra Interactive Map")
-page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast"])
+page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast", "Interactive Map (Alt)"])
 
 if page == "File Processor":
     st.title("File Processor")
-
     uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
-
     if uploaded_file is not None:
         xls = pd.ExcelFile(uploaded_file)
-
         for sheet_name in xls.sheet_names:
             df = process_sheet(xls, sheet_name)
             st.write(f"Preview of {sheet_name}:")
             st.dataframe(df.head())
-
-            # Convert DataFrame to CSV
             csv = to_csv(df)
             st.download_button(
                 label=f"Download {sheet_name} as CSV",
@@ -51,10 +48,9 @@ if page == "File Processor":
                 file_name=f"{sheet_name}.csv",
                 mime='text/csv',
             )
-##############################################################################################
+
 elif page == "Interactive Map":
     st.title("Interactive Map")
-
     # Function to calculate quantile bins for automated binning
     def calculate_quantile_bins(data, num_bins=5):
         quantiles = [i / num_bins for i in range(1, num_bins)]
@@ -139,7 +135,20 @@ elif page == "Interactive Map":
     # Display the map
     st_folium(m, width=900, height=700)
 
+elif page == "Interactive Map (Alt)":
+    st.title("Interactive Map (Alt) using Kepler.gl")
+    geojson_path = './maps/CENSUS_LEVEL.geojson'
+    gdf = gpd.read_file(geojson_path)
+    if gdf.crs != "epsg:4326":
+        gdf = gdf.to_crs(epsg=4326)
+    geojson_data = json.loads(gdf.to_json())
+    map_1 = KeplerGl(height=700)
+    map_1.add_data(data=geojson_data, name='Census Data')
+    with st.container():
+        map_1.save_to_html(file_name='kepler_map.html')
+        st.components.v1.html(open('kepler_map.html', 'r').read(), height=700, scrolling=True)
 
-##############################################################################################
+
 elif page == "Forecast":
     st.title("Forecast")
+    # Implement forecast functionality or model here if needed.
