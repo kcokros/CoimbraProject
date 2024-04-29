@@ -107,7 +107,7 @@ elif page == "Interactive Map":
         data=merged,
         columns=['NAME_2_cor', column_name],
         key_on='feature.properties.NAME_2_cor',
-        fill_color='YlGn',
+        fill_color='YlOrRd',
         fill_opacity=0.4,
         line_opacity=0.2,
         legend_name=f'{column_name} in {year}',
