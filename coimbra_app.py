@@ -6,6 +6,7 @@ import folium
 from folium.features import GeoJsonTooltip
 from streamlit_folium import folium_static, st_folium
 from keplergl import KeplerGl
+import matplotlib.pyplot as plt
 import json
 from io import BytesIO
 from folium.plugins import FloatImage
@@ -137,9 +138,12 @@ elif page == "Interactive Map":
     st_folium(m, width=900, height=700)
 
     # Display corresponding bar chart
-    st.subheader(f'Distribution of {column_name} in {year}')
-    bar_data = merged[[column_name, 'NAME_2_cor']].set_index('NAME_2_cor')
-    st.bar_chart(bar_data)
+    fig, ax = plt.subplots()
+    merged.set_index('NAME_2_cor')[column_name].plot(kind='bar', ax=ax, color='red')
+    ax.set_title(f'Distribution of {column_name} in {year}')
+    ax.set_ylabel(column_name)
+    ax.set_xlabel('Regions')
+    st.pyplot(fig)
 
 elif page == "Interactive Map (Alt)":
     st.title("Interactive Map (Alt) using Kepler.gl")
