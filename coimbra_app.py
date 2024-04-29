@@ -99,16 +99,17 @@ elif page == "Interactive Map":
     m = folium.Map(location=[40.2056, -8.4196], zoom_start=10)
 
     folium.Choropleth(
-        geo_data=merged,
+        geo_data=merged.to_json(),
         data=merged,
         columns=['NAME_2_cor', column_name],
         key_on='feature.properties.NAME_2_cor',
         fill_color='YlOrRd',
         fill_opacity=0.4,
         line_opacity=0.2,
-        legend_name=f'{column_name} in {year}',
+        legend_name=f'{column_name} in 2022',
         bins=bin_edges,
-        reset=True
+        reset=True,
+        tooltip=folium.GeoJsonTooltip(fields=[column_name], aliases=[f'{column_name}:'], localize=True)
     ).add_to(m)
 
     # Sidebar options for Area Type Map with no default selection
