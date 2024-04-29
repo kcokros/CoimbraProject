@@ -30,7 +30,7 @@ def to_csv(df):
 # Streamlit app layout
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 st.sidebar.title("Coimbra Interactive Map")
-page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Forecast", "Interactive Map (Alt)"])
+page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Interactive Map (Alt)", "Forecast"])
 
 if page == "File Processor":
     st.title("File Processor")
