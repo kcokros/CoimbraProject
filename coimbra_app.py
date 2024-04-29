@@ -100,7 +100,7 @@ elif page == "Interactive Map":
     merged[column_name].fillna(0, inplace=True)
     bin_edges = calculate_quantile_bins(merged[column_name])
 
-    m = folium.Map(location=[39.5, -8.0], zoom_start=7)
+    m = folium.Map(location=[40.2056, -8.4196], zoom_start=12)
 
     folium.Choropleth(
         geo_data=merged,
