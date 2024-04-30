@@ -1,15 +1,17 @@
 import streamlit as st
 import pandas as pd
 import geopandas as gpd
-import numpy as np
-import folium
-from folium.features import GeoJsonTooltip
-from streamlit_folium import folium_static, st_folium
-from keplergl import KeplerGl
 import matplotlib.pyplot as plt
-import json
+import matplotlib.colors as mcolors
+import matplotlib.colorbar as mcolorbar
 from io import BytesIO
-from folium.plugins import FloatImage
+import json
+from keplergl import KeplerGl
+import numpy as n
+import folium
+import leafmap.foliumap as leafmap
+import leafmap.colormaps as cm
+
 
 # Function to process each sheet in the Excel file
 def process_sheet(xls, sheet_name):
@@ -28,10 +30,24 @@ def to_csv(df):
     output.seek(0)
     return output
 
+# Function to calculate quantile bins
+def calculate_quantile_bins(data, num_bins=5):
+    quantiles = [i / num_bins for i in range(1, num_bins)]
+    bin_edges = list(data.quantile(quantiles))
+    min_edge, max_edge = data.min(), data.max()
+    bin_edges = [min_edge] + bin_edges + [max_edge]
+    return bin_edges
+
+# Function to create a colormap based on quantile bins
+def get_color(value, bin_edges):
+    cmap = plt.get_cmap('YlOrRd')
+    norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
+    return mcolors.to_hex(cmap(norm(value)))
+
 # Streamlit app layout
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 st.sidebar.title("Coimbra Interactive Map")
-page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Interactive Map (Alt)", "Forecast"])
+page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Interactive Map (Alt)", "Forecast"], key='page_select')
 
 if page == "File Processor":
     st.title("File Processor")
@@ -50,100 +66,110 @@ if page == "File Processor":
                 mime='text/csv',
             )
 
-elif page == "Interactive Map":
+if page == "Interactive Map":
     st.title("Interactive Map")
-    # Function to calculate quantile bins for automated binning
-    def calculate_quantile_bins(data, num_bins=5):
-        quantiles = [i / num_bins for i in range(1, num_bins)]
-        bin_edges = list(data.quantile(quantiles))
-        min_edge, max_edge = data.min(), data.max()
-        bin_edges = [min_edge] + bin_edges + [max_edge]
-        return bin_edges
 
-    # Load and process the shapefiles/data
-    choropleth_gdf = gpd.read_file('./maps/municipal.shp')  # Adjust path as necessary
-    choropleth_gdf = choropleth_gdf.to_crs(epsg=4326)
+    year = st.sidebar.slider("Select Year", 2020, 2023, key='year_slider')
+    # Update the slider to include 'Auto' as 0
+    num_bins = st.sidebar.select_slider(
+        "Select Number of Bins (Colors) or 'Auto' for automatic binning:",
+        options=[0, 2, 3, 4, 5, 6, 7, 8, 9],
+        format_func=lambda x: 'Auto' if x == 0 else str(x)
+    )
+    show_raw_data = st.sidebar.checkbox("Show Raw Data", key='show_raw_data_checkbox')
+    level = st.sidebar.radio("Select Geographical Level", ["Municipal", "District"], key='geo_level')
 
-    area_type_gdf = gpd.read_file('./maps/AreasEdificadas2018.shp')
-    area_type_gdf = area_type_gdf.set_crs(epsg=3763)
-    area_type_gdf = area_type_gdf.to_crs(epsg=4326)
-
-    # Create a mapping from 'TIPO_p' numerical values to human-readable labels
-    tipo_p_labels = {
-        1: "Residential (>= 10 Buildings)",
-        2: "Residential scattered/isolated",
-        3: "Non-Residential"
-    }
-
-    # Map the 'TIPO_p' values to their labels
-    area_type_gdf['TIPO_p_label'] = area_type_gdf['TIPO_p'].map(tipo_p_labels)
-
-    # Define a color for each 'TIPO_p' label
-    tipo_p_colors = {
-        "Residential (>= 10 Buildings)": "red",
-        "Residential scattered/isolated": "orange",
-        "Non-Residential": "purple"
-    }
-
-    # Sidebar options for Choropleth
-    year = st.sidebar.slider("Select Year", 2020, 2021, 2022, 2023)
+    # Load data and setup
+    municipal_gdf = gpd.read_file('./maps/municipal.shp').to_crs(epsg=4326)
+    district_gdf = gpd.read_file('./maps/district.shp').to_crs(epsg=4326)
     df_path = f'tables/{year}.xlsx'
     df = pd.read_excel(df_path)
     column_names = df.columns.tolist()[5:]
     column_name = st.sidebar.selectbox("Select Column", column_names)
 
-    merged = choropleth_gdf.merge(df, left_on='NAME_2_cor', right_on='Region')
+    # Conditionally merge data based on the selected level
+    if level == "Municipal":
+        merged = municipal_gdf.merge(df, left_on='NAME_2_cor', right_on='Border')
+    elif level == "District":
+        merged = district_gdf.merge(df, left_on='NUTIII_DSG', right_on='Border')
+
     merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
-    merged[column_name].fillna(0, inplace=True)
-    bin_edges = calculate_quantile_bins(merged[column_name])
+    merged.fillna(0, inplace=True)
 
-    m = folium.Map(location=[40.2056, -8.4196], zoom_start=10)
+    if num_bins > 0:  # User selected specific number of bins
+        bin_edges = calculate_quantile_bins(merged[column_name], num_bins)
+    else:  # Automatic binning with default quantiles
+        bin_edges = calculate_quantile_bins(merged[column_name])
 
-    folium.Choropleth(
-        geo_data=merged.to_json(),
-        data=merged,
-        columns=['NAME_2_cor', column_name],
-        key_on='feature.properties.NAME_2_cor',
-        fill_color='YlOrRd',
-        fill_opacity=0.4,
-        line_opacity=0.2,
-        legend_name=f'{column_name} in 2022',
-        bins=bin_edges,
-        reset=True,
-        tooltip=folium.GeoJsonTooltip(fields=[column_name], aliases=[f'{column_name}:'], localize=True)
+    m = leafmap.Map(center=[40.2056, -8.4196], zoom_start=10)
+
+    # Define the style function for choropleth
+    def style_function(feature):
+        value = feature['properties'][column_name]
+        fillColor = get_color(value, bin_edges) if value is not None else "transparent"  # Check if value is None
+        return {
+            'fillColor': fillColor,
+            'color': 'black',
+            'weight': 0.5,
+            'dashArray': '5, 5',
+            'fillOpacity': 0.6,
+        }
+
+    # Define a function to create tooltips using HTML
+    def get_tooltip_html(properties):
+        name = properties.get('NAME_2', 'No name')
+        value = properties.get(column_name, 'No data')
+        tooltip_html = f"""
+        <div style="min-width: 100px;">
+            <b>Municipality:</b> {name}<br>
+            <b>{column_name}:</b> {value}
+        </div>
+        """
+        return tooltip_html
+
+    # Add GeoJSON layer to the map with tooltip
+    geojson_layer = folium.GeoJson(
+        data=merged.__geo_interface__,
+        style_function=style_function,  # Assuming this is defined elsewhere in your code
+        tooltip=folium.GeoJsonTooltip(
+            fields=['NAME_2', column_name],
+            aliases=['Municipality', column_name.title()],
+            style=("background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 3px;")
+        )
     ).add_to(m)
+    
+    # Create layout for the map and the legend
+    row3_col1, row3_col2 = st.columns([5, 1])
 
-    # Sidebar options for Area Type Map with no default selection
-    st.sidebar.markdown("## Coimbra Region-only Area Options")
-    tipo_p_options = area_type_gdf['TIPO_p_label'].unique()
-    selected_tipo_p = st.sidebar.multiselect("Select Residential Density", tipo_p_options, default=[])
+    # Display the map in the first column
+    with row3_col1:
+        m.to_streamlit(height=700)
 
-    # Filter based on selected TIPO_p labels
-    filtered_area_type_gdf = area_type_gdf[area_type_gdf['TIPO_p_label'].isin(selected_tipo_p)]
+    # Calculate min and max values for the selected column
+    min_value = merged[column_name].min()
+    max_value = merged[column_name].max()
 
-    # Adding Area Type GeoJSON on top of the Choropleth Map
-    if not filtered_area_type_gdf.empty:
-        folium.GeoJson(
-            filtered_area_type_gdf,
-            style_function=lambda feature: {
-                'fillColor': tipo_p_colors[feature['properties']['TIPO_p_label']],
-                'color': 'black',
-                'weight': 0,
-                'fillOpacity': 0.6
-            },
-            tooltip=folium.GeoJsonTooltip(fields=['TIPO_p_label'], aliases=['Area Type:'])
-        ).add_to(m)
+    # Update the number of colors to match the number of bins or use 5 as default for 'Auto'
+    n_colors = num_bins if num_bins > 0 else 5
+    colors = cm.get_palette('YlOrRd', n_colors)
+    colors = ['#' + color if not color.startswith('#') else color for color in colors]
 
-    # Display the map
-    st_folium(m, width=900, height=700)
+    # Create a figure for the colormap legend
+    fig, ax = plt.subplots(figsize=(2, 6))
+    cmap = mcolors.LinearSegmentedColormap.from_list("custom_cmap", colors)
+    norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
+    cb = mcolorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation='vertical')
+    cb.set_label(column_name.replace("_", " ").title())
+    plt.tight_layout()
 
-    # Display corresponding bar chart
-    fig, ax = plt.subplots()
-    merged.set_index('NAME_2_cor')[column_name].plot(kind='bar', ax=ax, color='red')
-    ax.set_title(f'Distribution of {column_name} in {year}')
-    ax.set_ylabel(column_name)
-    ax.set_xlabel('Regions')
-    st.pyplot(fig)
+    # Display the legend in the second column
+    with row3_col2:
+        st.pyplot(fig)
+
+    if show_raw_data:
+        st.write("Raw Data")
+        selected_columns = st.multiselect("Select columns to display:", df.columns.tolist(), default=df.columns.tolist())
+        st.dataframe(df[selected_columns])
 
 elif page == "Interactive Map (Alt)":
     st.title("Interactive Map (Alt) using Kepler.gl")
@@ -168,8 +194,7 @@ elif page == "Interactive Map (Alt)":
     map_1.add_data(data=geojson_data, name='Census Data')
     with st.container():
         map_1.save_to_html(file_name='kepler_map.html')
-        st.components.v1.html(open('kepler_map.html', 'r').read(), height=700, scrolling=True)
-
+        st.components.v1.html(open('kepler_map.html', 'r').read(), height=700)
 
 elif page == "Forecast":
     st.title("Forecast")
