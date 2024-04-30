@@ -9,4 +9,4 @@ matplotlib
 plotly
 keplergl
 leafmap
-gdal
+GDAL
