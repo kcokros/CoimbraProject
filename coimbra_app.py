@@ -11,7 +11,10 @@ import numpy as n
 import folium
 import leafmap.foliumap as leafmap
 import leafmap.colormaps as cm
+import seaborn as sns
 
+# Set Streamlit page configuration to use wide mode
+st.set_page_config(layout="wide")
 
 # Function to process each sheet in the Excel file
 def process_sheet(xls, sheet_name):
@@ -47,7 +50,7 @@ def get_color(value, bin_edges):
 # Streamlit app layout
 st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 st.sidebar.title("Coimbra Interactive Map")
-page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Interactive Map (Alt)", "Forecast"], key='page_select')
+page = st.sidebar.radio("Select a Page", ["File Processor", "Interactive Map", "Coimbra District Map", "Forecast"], key='page_select')
 
 if page == "File Processor":
     st.title("File Processor")
@@ -166,35 +169,56 @@ if page == "Interactive Map":
     with row3_col2:
         st.pyplot(fig)
 
+    # Adding a bar chart to visualize data distribution
+    bar_chart_color = st.sidebar.color_picker("Pick a bar chart color", '#FFA07A')  # Default light salmon
+
+    # Visualization
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.barplot(x=merged['NAME_2'], y=merged[column_name], palette=[bar_chart_color], ax=ax)
+    ax.set_title(f'Distribution of {column_name.replace("_", " ").title()} Across {level}')
+    ax.set_xlabel('Geographical Area')
+    ax.set_ylabel(column_name.replace("_", " ").title())
+    ax.tick_params(axis='x', rotation=45)
+    plt.tight_layout()
+
+    row4_col1, row4_col2 = st.columns([4, 1])  # Adjust as needed
+
+    with row4_col1:
+        st.pyplot(fig)
+
+    # Tooltip interaction (simplified for example)
+    # Assuming you want to show additional data when hovering over a bar
+    tooltips_data = merged[['NAME_2', column_name]]
+    tooltips_data = tooltips_data.to_dict('records')
+    with row4_col2:
+        st.write("Data on Hover:")
+        hover_area = st.empty()  # Placeholder for displaying hovered data
+    
+    @st.cache_data(allow_output_mutation=True)
+    def get_tooltip_content(index):
+        # Function to fetch tooltip content; for now, just return the formatted string
+        return f"{tooltips_data[index]['NAME_2']}: {tooltips_data[index][column_name]}"
+
+    # Interaction logic (simplified, you'll need JavaScript in a real scenario)
+    # Here's a pseudo-handler for hover events
+    selected_index = st.number_input("Enter bar index to see details:", min_value=0, max_value=len(tooltips_data)-1, value=0, step=1)
+    hover_area.write(get_tooltip_content(selected_index))
+
+
     if show_raw_data:
         st.write("Raw Data")
         selected_columns = st.multiselect("Select columns to display:", df.columns.tolist(), default=df.columns.tolist())
         st.dataframe(df[selected_columns])
 
-elif page == "Interactive Map (Alt)":
-    st.title("Interactive Map (Alt) using Kepler.gl")
-    geojson_path = './maps/CENSUS_LEVEL.geojson'
-    gdf = gpd.read_file(geojson_path)
-    if gdf.crs != "epsg:4326":
-        gdf = gdf.to_crs(epsg=4326)
-    geojson_data = json.loads(gdf.to_json())
-
-    map_config = {
-        'version': 'v1',
-        'config': {
-            'mapState': {
-                'latitude': 40.2056,
-                'longitude': -8.4196,
-                'zoom': 10
-            }
-        }
-    }
+elif page == "Coimbra District Map":
+    st.title("Coimbra District Statistical Subsections Interactive Map")
     
-    map_1 = KeplerGl(height=700)
-    map_1.add_data(data=geojson_data, name='Census Data')
+    # Define the URL for the Kepler.gl map
+    map_url = "https://kepler.gl/demo/map?mapUrl=https://dl.dropboxusercontent.com/scl/fi/ikg12cp2bxug0b9x538lf/Coimbra.json?rlkey=6jtztk3xjgffjz9vfk7i3y62r&dl=0"
+    
+    # Create a full-width container for the iframe
     with st.container():
-        map_1.save_to_html(file_name='kepler_map.html')
-        st.components.v1.html(open('kepler_map.html', 'r').read(), height=700)
+        st.components.v1.iframe(map_url, width=None, height=600)  # Set width to None for full width
 
 elif page == "Forecast":
     st.title("Forecast")
