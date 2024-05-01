@@ -162,12 +162,6 @@ if page == "Interactive Map":
         selected_columns = st.multiselect("Select columns to display:", df.columns.tolist(), default=df.columns.tolist())
         st.dataframe(df[selected_columns])
 
-
-    if show_raw_data:
-        st.write("Raw Data")
-        selected_columns = st.multiselect("Select columns to display:", df.columns.tolist(), default=df.columns.tolist())
-        st.dataframe(df[selected_columns])
-
 elif page == "Coimbra District Map":
     st.title("Coimbra District Statistical Subsections Interactive Map")
     
