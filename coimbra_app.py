@@ -27,11 +27,13 @@ texts = {
         'download_csv': 'Download as CSV',
         'select_page': 'Select a Page',
         'select_year': 'Select Year',
-        'select_bins': 'Select Number of Bins (Colors) or "Auto" for automatic binning:',
+        'select_bins': 'Select Number of Bins (Colors):',
         'show_raw_data': 'Show Raw Data',
         'select_geographical_level': 'Select Geographical Level',
         'show_3d_view': 'Show 3D View',
-        'elevation_scale': 'Elevation Scale'
+        'elevation_scale': 'Elevation Scale',
+        'select_column': 'Select Column',  # Added translation
+        'select_color_map': 'Select Color Map'  # Added translation
     },
     'pt': {
         'title': 'Mapa Interativo de Coimbra',
@@ -43,14 +45,15 @@ texts = {
         'download_csv': 'Baixar como CSV',
         'select_page': 'Selecione uma Página',
         'select_year': 'Selecione o Ano',
-        'select_bins': 'Selecione o Número de Divisões (Cores) ou "Auto" para divisão automática:',
+        'select_bins': 'Selecione o Número de Divisões (Cores):',
         'show_raw_data': 'Mostrar Dados Brutos',
         'select_geographical_level': 'Selecione o Nível Geográfico',
         'show_3d_view': 'Mostrar Vista 3D',
-        'elevation_scale': 'Escala de Elevação'
+        'elevation_scale': 'Escala de Elevação',
+        'select_column': 'Selecione a Coluna', 
+        'select_color_map': 'Selecione o Mapa de Cores' 
     }
 }
-
 
 # Set Streamlit page configuration to use wide mode
 st.set_page_config(layout="wide")
@@ -89,8 +92,7 @@ def calculate_quantile_bins(data, num_bins=5):
     return bin_edges
 
 # Function to create a colormap based on quantile bins
-def get_color(value, bin_edges):
-    cmap = plt.get_cmap('YlOrRd')
+def get_color(value, bin_edges, cmap):
     norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
     return mcolors.to_hex(cmap(norm(value)))
 
@@ -120,10 +122,11 @@ def generate_3d_map(geo_data_frame, column_name, elevation_scale):
     return pdk.Deck(layers=[layer], initial_view_state=view_state, map_style='mapbox://styles/mapbox/light-v9')
 
 def load_census_data():
-    return pd.read_excel('./tables/CENSUS_2021.xlsx')  # Update path if necessary
+    return pd.read_excel('./tables/CENSUS_2021.xlsx') 
 
 # Streamlit app layout
 # Display the toggle button
+st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
 col1, col2, col3 = st.sidebar.columns([1,2,1])
 toggle_button_label = "Switch to Português" if st.session_state['lang'] == 'en' else "Switch to English"
 with col2:
@@ -131,45 +134,61 @@ with col2:
         toggle_language()
 # Using the language setting
 lang = st.session_state['lang']
-st.sidebar.image("https://i.postimg.cc/hjT72Vcx/logo-black.webp", use_column_width=True)
-st.sidebar.title(texts[lang]['select_page'])  # CHANGE: Localized text
+st.sidebar.title(texts[lang]['select_page'])  
 page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['forecast']], key='page_select')
 
 if page == texts[lang]['file_processor']:
-    st.title(texts[lang]['file_processor'])  # CHANGE: Localized title
+    st.title(texts[lang]['file_processor']) 
     uploaded_file = st.file_uploader(texts[lang]['upload_excel'], type=["xlsx"])
     if uploaded_file is not None:
         xls = pd.ExcelFile(uploaded_file)
-        header_row = 1 if lang == 'pt' else 0  # CHANGE: Header row based on language
+        header_row = 1 if lang == 'pt' else 0 
         for sheet_name in xls.sheet_names:
             df = process_sheet(xls, sheet_name, header_row)
             st.write(f"Preview of {sheet_name}:")
             st.dataframe(df.head())
             csv = to_csv(df)
             st.download_button(
-                label=texts[lang]['download_csv'].format(sheet_name=sheet_name),  # CHANGE: Localized button label
+                label=texts[lang]['download_csv'].format(sheet_name=sheet_name),
                 data=csv,
                 file_name=f"{sheet_name}.csv",
                 mime='text/csv',
             )
 
 if page == texts[lang]['interactive_map']:
-    st.title(texts[lang]['interactive_map'])  # CHANGE: Localized title
+    st.title(texts[lang]['interactive_map'])
+    
+    # Create columns for controls
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        year = st.slider(texts[lang]['select_year'], 2020, 2023, key='year_slider')
+        num_bins = st.select_slider(
+            texts[lang]['select_bins'],
+            options=[0, 2, 3, 4, 5, 6, 7, 8, 9],
+            format_func=lambda x: 'Auto' if x == 0 else str(x)
+        )
 
-    year = st.sidebar.slider(texts[lang]['select_year'], 2020, 2023, key='year_slider')
-    num_bins = st.sidebar.select_slider(
-        texts[lang]['select_bins'],  # CHANGE: Localized text
-        options=[0, 2, 3, 4, 5, 6, 7, 8, 9],
-        format_func=lambda x: 'Auto' if x == 0 else str(x)
-    )
-    show_raw_data = st.sidebar.checkbox(texts[lang]['show_raw_data'], key='show_raw_data_checkbox')  # CHANGE: Localized text
-    level = st.sidebar.radio(texts[lang]['select_geographical_level'], ["Municipal", "District"], key='geo_level')  # CHANGE: Localized text
-    show_3d = st.sidebar.checkbox(texts[lang]['show_3d_view'])  # CHANGE: Localized text
+    with col2:
+        level = st.radio(texts[lang]['select_geographical_level'], ["Municipal", "District"], key='geo_level')
+        color_map = st.selectbox(
+            texts[lang]['select_color_map'],
+            options=["Warm Sunset", "Viridis", "Plasma", "Inferno", "Cividis"],
+            index=0  # Default to "Warm Sunset"
+        )
+        
+    with col3:
+        show_raw_data = st.checkbox(texts[lang]['show_raw_data'], key='show_raw_data_checkbox')
+        show_3d = st.checkbox(texts[lang]['show_3d_view'])
+        
+        if show_3d:
+            elevation_scale = st.slider(texts[lang]['elevation_scale'], 1, 500, 100)
 
+    # Preload data to define column_names
     df_path = f'tables/{year}.xlsx'
     df = pd.read_excel(df_path)
     column_names = df.columns.tolist()[5:]
-    column_name = st.sidebar.selectbox("Select Column", column_names)
+    column_name = st.selectbox(texts[lang]['select_column'], column_names)
 
     if level == "Municipal":
         gdf = gpd.read_file('./maps/municipal.shp').to_crs(epsg=4326)
@@ -179,7 +198,6 @@ if page == texts[lang]['interactive_map']:
     merged = gdf.merge(df, how='left', left_on='NAME_2_cor', right_on='Border' if level == "Municipal" else 'NUTIII_DSG')
 
     if show_3d:
-        elevation_scale = st.slider(texts[lang]['elevation_scale'], 1, 500, 100)  # CHANGE: Localized text
         deck_gl = generate_3d_map(merged, column_name, elevation_scale)
         st.pydeck_chart(deck_gl)
     else:
@@ -192,30 +210,52 @@ if page == texts[lang]['interactive_map']:
         else:
             bin_edges = calculate_quantile_bins(merged[column_name])
 
-        def style_function(feature):
-            value = feature['properties'][column_name]
-            fillColor = get_color(value, bin_edges) if value is not None else "transparent"
-            return {
-                'fillColor': fillColor,
+        def get_colormap(cmap_name):
+            cmap_dict = {
+                "Warm Sunset (YlOrRd)": plt.get_cmap('YlOrRd'),
+                "Viridis": plt.get_cmap('viridis'),
+                "Plasma": plt.get_cmap('plasma'),
+                "Inferno": plt.get_cmap('inferno'),
+                "Cividis": plt.get_cmap('cividis')
+            }
+            return cmap_dict.get(cmap_name, plt.get_cmap('YlOrRd'))  # Default to 'YlOrRd' if no match
+
+        # When applying styles in folium:
+        current_cmap = get_colormap(color_map)
+
+        geojson_layer = folium.GeoJson(
+            data=merged.__geo_interface__,
+            style_function=lambda feature: {
+                'fillColor': get_color(feature['properties'][column_name], bin_edges, current_cmap) if feature['properties'][column_name] is not None else "transparent",
                 'color': 'black',
                 'weight': 0.5,
                 'dashArray': '5, 5',
                 'fillOpacity': 0.6,
-            }
-
-        geojson_layer = folium.GeoJson(
-            data=merged.__geo_interface__,
-            style_function=style_function,
+            },
             tooltip=folium.GeoJsonTooltip(
                 fields=['NAME_2', column_name],
                 aliases=['Municipality', column_name.title()],
                 style=("background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 3px;")
             )
         ).add_to(m)
-        m.to_streamlit(height=700)
+
+        # Layout for map and legend
+        col_map, col_legend = st.columns([9, 1])
+        with col_map:
+            m.to_streamlit(height=700)
+
+        # Legend setup
+        with col_legend:
+            fig, ax = plt.subplots(figsize=(2, 6))
+            cmap = get_colormap(color_map)  # Assuming you've defined the function to get the colormap
+            norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
+            colorbar = mcolorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation='vertical')
+            
+            # Set the title for the color legend
+            colorbar.set_label(f"{column_name.replace('_', ' ').title()}", size=12)  # Modify font size as needed
+            st.pyplot(fig)
 
     if show_raw_data:
-        st.write(texts[lang]['show_raw_data'])  # CHANGE: Localized text
         selected_columns = st.multiselect("Select columns to display:", df.columns.tolist(), default=df.columns.tolist())
         st.dataframe(df[selected_columns])
 
