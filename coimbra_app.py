@@ -32,8 +32,8 @@ texts = {
         'select_geographical_level': 'Select Geographical Level',
         'show_3d_view': 'Show 3D View',
         'elevation_scale': 'Elevation Scale',
-        'select_column': 'Select Column',  # Added translation
-        'select_color_map': 'Select Color Map'  # Added translation
+        'select_column': 'Select Column', 
+        'select_color_map': 'Select Color Map' 
     },
     'pt': {
         'title': 'Mapa Interativo de Coimbra',
