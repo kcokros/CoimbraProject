@@ -11,3 +11,4 @@ keplergl
 seaborn
 pydeck
 leafmap
+ipyvizzu
