@@ -166,7 +166,7 @@ elif page == "Coimbra District Map":
     st.title("Coimbra District Statistical Subsections Interactive Map")
     
     # Define the URL for the Kepler.gl map
-    map_url = "https://kepler.gl/demo/map?mapUrl=https://dl.dropboxusercontent.com/scl/fi/ikg12cp2bxug0b9x538lf/Coimbra.json?rlkey=6jtztk3xjgffjz9vfk7i3y62r&dl=0"
+    map_url = "https://kepler.gl/demo/map?mapUrl=https://dl.dropboxusercontent.com/scl/fi/s1rop4d4qw8a8p5dzmss3/Coimbra-Coolectiva.json?rlkey=mjuw0kw24ihz1rb828d5fw0cr&dl=0"
     
     # Create a full-width container for the iframe
     with st.container():
