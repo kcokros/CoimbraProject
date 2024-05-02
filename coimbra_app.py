@@ -170,7 +170,7 @@ elif page == "Coimbra District Map":
     
     # Create a full-width container for the iframe
     with st.container():
-        st.components.v1.iframe(map_url, width=None, height=600)  # Set width to None for full width
+        st.components.v1.iframe(map_url, width=None, height=None)  # Set width to None for full width
 
 elif page == "Forecast":
     st.title("Forecast")
