@@ -163,7 +163,7 @@ if page == "Interactive Map":
         st.dataframe(df[selected_columns])
 
 elif page == "Coimbra District Map":
-    st.title("Coimbra District Statistical Subsections Interactive Map")
+    st.title("Coimbra Statistical Subsections Interactive Map")
     
     # Define the URL for the Kepler.gl map
     map_url = "https://kepler.gl/demo/map?mapUrl=https://dl.dropboxusercontent.com/scl/fi/t5u7fwfy8xf5zlcqsdv9s/Coolectiva.json?rlkey=fpwk2ahuwa3lzckpt076uk0h3&dl=0"
