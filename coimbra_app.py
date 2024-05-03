@@ -13,16 +13,15 @@ import leafmap.foliumap as leafmap
 import leafmap.colormaps as cm
 import seaborn as sns
 import pydeck as pdk
-from ipyvizzu import Chart, Data, Config, Style
 
-# CHANGE: Language dictionaries
+# Language dictionaries
 texts = {
     'en': {
         'title': 'Interactive Map of Coimbra',
         'file_processor': 'File Processor',
         'interactive_map': 'Interactive Map',
         'district_map': 'Coimbra District Map',
-        'forecast': 'Forecast',
+        'chart_generator': 'Chart Generator',
         'upload_excel': 'Upload your Excel file',
         'download_csv': 'Download as CSV',
         'select_page': 'Select a Page',
@@ -32,15 +31,32 @@ texts = {
         'select_geographical_level': 'Select Geographical Level',
         'show_3d_view': 'Show 3D View',
         'elevation_scale': 'Elevation Scale',
-        'select_column': 'Select Column',  # Added translation
-        'select_color_map': 'Select Color Map'  # Added translation
+        'select_column': 'Select Column',
+        'select_color_map': 'Select Color Map',
+        'show_bar_chart' : 'Show Bar Chart',
+        'select_data_source': 'Select Data Source',
+        'census_data': 'Census 2021 Data',
+        'upload_csv': 'Upload your dataset in CSV format',
+        'enter_custom_title': 'Enter a custom title for the chart (leave blank for default):',
+        'select_column_to_filter': 'Select Column to Filter Values (optional)',
+        'select_values_to_include': 'Select Values to Include',
+        'enter_row_ranges': "Enter Row Ranges (optional, e.g., '1-10, 15, 20-30, -5--1')",
+        'select_chart_type': 'Select Chart Type',
+        'select_x_axis_variable': 'Select X-axis Variable',
+        'select_y_axis_variable': 'Select Y-axis Variable',
+        'select_color_palette': 'Select Color Palette',
+        'generate_chart': 'Generate Chart',
+        'advanced_chart_builder': 'Advanced Chart Builder',
+        'open_vizzu_builder': 'Open Vizzu Builder',
+        'interactive_design_tools': 'Interactive design tools that allow you to create and customize charts.',
+        'click_button_above': 'Click the button above to access Vizzu, a tool that allows you to design and customize charts interactively.'
     },
     'pt': {
         'title': 'Mapa Interativo de Coimbra',
         'file_processor': 'Processador de Arquivos',
         'interactive_map': 'Mapa Interativo',
         'district_map': 'Mapa do Distrito de Coimbra',
-        'forecast': 'Previsão',
+        'chart_generator': 'Gerador de Gráficos',
         'upload_excel': 'Carregue o seu ficheiro Excel',
         'download_csv': 'Baixar como CSV',
         'select_page': 'Selecione uma Página',
@@ -51,7 +67,24 @@ texts = {
         'show_3d_view': 'Mostrar Vista 3D',
         'elevation_scale': 'Escala de Elevação',
         'select_column': 'Selecione a Coluna', 
-        'select_color_map': 'Selecione o Mapa de Cores' 
+        'show_bar_chart' : 'Mostrar gráfico de barras',
+        'select_color_map': 'Selecione o Mapa de Cores',
+        'select_data_source': 'Selecione a Fonte de Dados',
+        'census_data': 'Dados do Censo 2021',
+        'upload_csv': 'Carregue o seu conjunto de dados em formato CSV',
+        'enter_custom_title': 'Insira um título personalizado para o gráfico (deixe em branco para o padrão):',
+        'select_column_to_filter': 'Selecione a Coluna para Filtrar Valores (opcional)',
+        'select_values_to_include': 'Selecione Valores para Incluir',
+        'enter_row_ranges': "Insira os Intervalos de Linhas (opcional, ex.: '1-10, 15, 20-30, -5--1')",
+        'select_chart_type': 'Selecione o Tipo de Gráfico',
+        'select_x_axis_variable': 'Selecione a Variável do Eixo X',
+        'select_y_axis_variable': 'Selecione a Variável do Eixo Y',
+        'select_color_palette': 'Selecione a Paleta de Cores',
+        'generate_chart': 'Gerar Gráfico',
+        'advanced_chart_builder': 'Construtor Avançado de Gráficos',
+        'open_vizzu_builder': 'Abrir Construtor Vizzu',
+        'interactive_design_tools': 'Ferramentas de design interativas que permitem criar e personalizar gráficos.',
+        'click_button_above': 'Clique no botão acima para acessar o Vizzu, uma ferramenta que permite projetar e personalizar gráficos de forma interativa.'
     }
 }
 
@@ -96,6 +129,29 @@ def get_color(value, bin_edges, cmap):
     norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
     return mcolors.to_hex(cmap(norm(value)))
 
+def plot_bar_chart(df, geo_column, column, color_map, title=None, axis_orientation='vertical'):
+    """ Generate a bar chart with the specified settings. """
+    plt.figure(figsize=(12, 8))
+    cmap = plt.get_cmap(color_map)
+    grouped_data = df.groupby(geo_column)[column].mean().sort_values()
+
+    color_values = cmap(n.linspace(0, 1, len(grouped_data)))
+
+    if axis_orientation == 'vertical':
+        ax = grouped_data.plot(kind='bar', color=color_values, edgecolor='black')
+        plt.xlabel(geo_column)
+        plt.ylabel(column)
+    else:
+        ax = grouped_data.plot(kind='barh', color=color_values, edgecolor='black')
+        plt.ylabel(geo_column)
+        plt.xlabel(column)
+
+    plt.title(title if title else f"Bar Chart of {column} by {geo_column}")
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.tight_layout()
+
+    return plt.gcf()
+
 # Function to create a Pydeck 3D visualization
 def generate_3d_map(geo_data_frame, column_name, elevation_scale):
     geo_data_frame['elevation'] = pd.to_numeric(geo_data_frame[column_name], errors='coerce') * elevation_scale
@@ -121,8 +177,56 @@ def generate_3d_map(geo_data_frame, column_name, elevation_scale):
 
     return pdk.Deck(layers=[layer], initial_view_state=view_state, map_style='mapbox://styles/mapbox/light-v9')
 
-def load_census_data():
+def load_data():
     return pd.read_excel('./tables/CENSUS_2021.xlsx') 
+
+# Function to parse row input for selecting rows
+def parse_row_input(row_input, df_length):
+    rows = []
+    parts = row_input.split(',')
+    for part in parts:
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            if start < 0:  # Negative indexing
+                start = df_length + start
+            if end < 0:
+                end = df_length + end
+            rows.extend(range(start, end + 1))
+        else:
+            idx = int(part)
+            if idx < 0:
+                idx = df_length + idx
+            rows.append(idx)
+    return sorted(set(rows))
+
+# Function to generate and display charts
+def generate_chart(data, x_col, y_col, chart_type, palette, chart_title):
+    plt.figure(figsize=(15, 8))
+    if chart_type == 'Bar Chart':
+        chart = sns.barplot(x=x_col, y=y_col, data=data, palette=palette)
+    elif chart_type == 'Line Chart':
+        chart = sns.lineplot(x=x_col, y=y_col, data=data, palette=palette)
+    
+    # Apply character limit for display purposes
+    chart.set_xticklabels([label.get_text()[:15] + '...' if len(label.get_text()) > 15 else label.get_text() for label in chart.get_xticklabels()])
+    plt.xticks(rotation=45)
+    # Use user input title or default
+    plt.title(chart_title if chart_title else f'{chart_type} for {y_col} by {x_col}')
+    plt.tight_layout()
+    st.pyplot(plt.gcf())
+    
+    # Convert plot to PNG for download
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    return buf
+
+# Function to get CSV download link
+def get_csv(data):
+    output = BytesIO()
+    data.to_csv(output, index=False)
+    output.seek(0)
+    return output
 
 # Streamlit app layout
 # Display the toggle button
@@ -135,7 +239,7 @@ with col2:
 # Using the language setting
 lang = st.session_state['lang']
 st.sidebar.title(texts[lang]['select_page'])  
-page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['forecast']], key='page_select')
+page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['chart_generator']], key='page_select')
 
 if page == texts[lang]['file_processor']:
     st.title(texts[lang]['file_processor']) 
@@ -178,6 +282,7 @@ if page == texts[lang]['interactive_map']:
         )
         
     with col3:
+        show_bar_chart = st.checkbox(texts[lang]['show_bar_chart'], key='show_bar_chart')
         show_raw_data = st.checkbox(texts[lang]['show_raw_data'], key='show_raw_data_checkbox')
         show_3d = st.checkbox(texts[lang]['show_3d_view'])
         
@@ -231,7 +336,7 @@ if page == texts[lang]['interactive_map']:
                 "Inferno": plt.get_cmap('inferno'),
                 "Cividis": plt.get_cmap('cividis')
             }
-            return cmap_dict.get(cmap_name, plt.get_cmap('YlOrRd'))  # Default to 'YlOrRd' if no match
+            return cmap_dict.get(cmap_name, plt.get_cmap('YlOrRd'))
 
         # When applying styles in folium:
         current_cmap = get_colormap(color_map)
@@ -269,9 +374,42 @@ if page == texts[lang]['interactive_map']:
             colorbar.set_label(f"{column_name.replace('_', ' ').title()}", size=12)
             st.pyplot(fig)
 
+
+
+    # After the map display code
+    if show_bar_chart:
+        axis_orientation = st.selectbox("Choose Bar Chart Orientation", ['vertical', 'horizontal'], index=0)
+        custom_bar_chart_title = st.text_input("Custom Title for Bar Chart", "")
+        custom_x_label = st.text_input("Custom X Axis Label", "")
+        custom_y_label = st.text_input("Custom Y Axis Label", "")
+        # Get the current color map as a string suitable for matplotlib
+        plt_cmap_name = {
+            "Warm Sunset": "YlOrRd",
+            "Viridis": "viridis",
+            "Plasma": "plasma",
+            "Inferno": "inferno",
+            "Cividis": "cividis"
+        }.get(color_map, "YlOrRd")
+        
+        geo_column = 'NAME_2_cor' if level == "Municipal" else 'NUTIII_DSG'
+        
+        # Generate the bar chart with a custom or default title
+        chart_fig = plot_bar_chart(merged, geo_column, column_name, plt_cmap_name, custom_bar_chart_title.strip() or None, axis_orientation)
+        st.pyplot(chart_fig)
+
     if show_raw_data:
         selected_columns = st.multiselect("Select columns to display:", df.columns.tolist(), default=df.columns.tolist())
         st.dataframe(df[selected_columns])
+
+elif page == texts[lang]['district_map']:
+    st.title(texts[lang]['district_map'])
+
+    # Define the URL for the Kepler.gl map
+    map_url = "https://kepler.gl/demo/map?mapUrl=https://dl.dropboxusercontent.com/scl/fi/t5u7fwfy8xf5zlcqsdv9s/Coolectiva.json?rlkey=fpwk2ahuwa3lzckpt076uk0h3&dl=0"
+    
+    # Create a full-width container for the iframe
+    with st.container():
+        st.components.v1.iframe(map_url, width=None, height=720)
 
 elif page == texts[lang]['district_map']:
     st.title(texts[lang]['district_map'])  # CHANGE: Localized title
@@ -283,51 +421,56 @@ elif page == texts[lang]['district_map']:
     with st.container():
         st.components.v1.iframe(map_url, width=None, height=720)  # Set width to None for full width
 
-elif page == texts[lang]['forecast']:
-    st.title(texts[lang]['forecast'])  # CHANGE: Localized title
-    census_df = load_census_data()
+elif page == texts[lang]['chart_generator']:
+    st.title(texts[lang]['chart_generator'])
 
-    # Dynamic Chart Configuration Options
-    st.subheader("Chart Generator")
-    chart_type = st.selectbox("Select Chart Type", ['Bar', 'Line', 'Area', 'Pie'], key='chart_type')
-    x_axis = st.selectbox("Choose the X-axis", census_df.columns, key='x_axis')
-    y_axis = st.selectbox("Choose the Y-axis", census_df.columns, key='y_axis')
-    color_scheme = st.selectbox("Select Color Scheme", ['classic', 'candy', 'autumn', 'dark'], key='color_scheme')
+    data_source = st.radio(texts[lang]['select_data_source'], [texts[lang]['census_data'], texts[lang]['upload_csv']])
+    data = None
+    if data_source == texts[lang]['upload_csv']:
+        uploaded_file = st.file_uploader(texts[lang]['upload_csv'], type=["csv"])
+        if uploaded_file is not None:
+            data = pd.read_csv(uploaded_file)
+    else:
+        data = load_data()
 
-    if st.button("Generate Chart", key='generate_chart'):
-        # Directly setting data during the initialization of the Data object
-        data = Data({
-            "datasets": [
-                {
-                    x_axis: census_df[x_axis].tolist(),
-                    y_axis: census_df[y_axis].tolist()
-                }
-            ]
-        })
+    if data is not None:
+        custom_title = st.text_input(texts[lang]['enter_custom_title'])
+        
+        filter_col = st.selectbox(texts[lang]['select_column_to_filter'], [""] + data.columns.tolist())
+        if filter_col:
+            unique_values = data[filter_col].dropna().unique()
+            selected_values = st.multiselect(texts[lang]['select_values_to_include'], options=unique_values)
+            data = data[data[filter_col].isin(selected_values)] if selected_values else data
 
-        chart = Chart()
-        chart.animate(data)
+        row_input = st.text_input(texts[lang]['enter_row_ranges'])
+        if row_input:
+            selected_rows = parse_row_input(row_input, len(data))
+            data = data.iloc[selected_rows]
 
-        config = Config({
-            "channels": {
-                "y": {"set": y_axis},
-                "x": {"set": x_axis},
-                "color": {"set": x_axis, "range": {"scheme": color_scheme}}
-            },
-            "geometry": chart_type.lower()
-        })
+        if not data.empty:
+            chart_type = st.selectbox(texts[lang]['select_chart_type'], ["Bar Chart", "Line Chart", "Other"])
+            columns = data.columns.tolist()
+            x_col = st.selectbox(texts[lang]['select_x_axis_variable'], columns, index=0)
+            y_col = st.selectbox(texts[lang]['select_y_axis_variable'], columns, index=1)
+            palette = st.selectbox(texts[lang]['select_color_palette'], sns.palettes.SEABORN_PALETTES.keys(), index=3)
+            
+            if st.button(texts[lang]['generate_chart']):
+                buf = generate_chart(data, x_col, y_col, chart_type, palette, custom_title)
+                st.download_button(texts[lang]['download_chart_png'], buf.getvalue(), file_name="chart.png", mime="image/png")
+                csv = get_csv(data)
+                st.download_button(texts[lang]['download_data_csv'], csv.getvalue(), file_name="data.csv", mime="text/csv")
 
-        chart.animate(config)
+    # Vizzu Link
+    st.markdown(f"## {texts[lang]['advanced_chart_builder']}")
+    st.markdown(
+        f"""
+        <a href="https://vizzu-builder.streamlit.app/" target="_blank">
+            <button style="width:100%; height: 50px; color: white; background-color: #FF4B4B; border: none; border-radius: 5px; cursor: pointer;">
+                {texts[lang]['open_vizzu_builder']}
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
 
-        style = Style({
-            "plot": {
-                "xAxis": {"label": {"fontSize": 14}},
-                "yAxis": {"label": {"fontSize": 14}},
-                "title": {"fontSize": 20}
-            }
-        })
-
-        chart.animate(style)
-
-        # Display the chart in Streamlit using HTML
-        st.components.v1.html(chart.to_html(), height=500)
+    st.text(texts[lang]['click_button_above'])
