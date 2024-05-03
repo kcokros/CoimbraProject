@@ -14,7 +14,6 @@ import leafmap.colormaps as cm
 import seaborn as sns
 import pydeck as pdk
 from ipyvizzu import Chart, Data, Config, Style
-from locations import portugal_geo_structure
 
 # CHANGE: Language dictionaries
 texts = {
