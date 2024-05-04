@@ -378,40 +378,6 @@ if page == texts[lang]['interactive_map']:
         # Load the selected data
         data_path = Path(base_path) / year / topic / selected_indicator
         df = load_data(data_path)
-                
-            return sorted(os.listdir(year_path))
-        def get_indicators(topic_path):
-             try:
-                return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
-             except Exception as e:
-                print(f"Error accessing {topic_path}: {e}")
-                return []
-        
-        def load_csv(year, topic, indicator):
-            # Ensure all inputs are treated as strings
-            year = str(year)
-            topic = str(topic)
-            indicator = str(indicator)
-            file_path = os.path.join(base_path, year, topic, indicator)
-            try:
-                # Attempt to load the CSV file into a DataFrame
-                return pd.read_csv(file_path)
-            except Exception as e:
-                print(f"Failed to load data from {file_path}: {e}")
-                # Optionally, return an empty DataFrame or raise an error
-                return pd.DataFrame()
-        
-        # Language selection and year/topic/indicator/column selection
-        year = st.selectbox(texts[lang]['select_year'], get_years())
-        topics = list_topics(year, lang)
-        topic = st.selectbox(texts[lang]['select_topic'], [t[0] for t in topics])
-        selected_code = (code for name, code in topics if name == topic_choice)  # Get code by name
-        topic_path = os.path.join(base_path, selected_year, topic)
-        
-        # Display indicators based on the chosen topic and year
-        indicators = get_indicators(topic_path)
-        indicator = st.selectbox(texts[lang]['select_indicator'], indicators)
-        df = load_csv(year, topic, indicator)
 
     if df is not None:
         column_names = df.columns.tolist()
