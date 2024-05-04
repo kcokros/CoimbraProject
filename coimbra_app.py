@@ -322,10 +322,9 @@ if page == texts[lang]['interactive_map']:
     else:
         # Assume the base path to the 'Preloaded' folder
         base_path = "Preloaded"
-
-        def get_years(base_path):
-            return sorted([dir_name for dir_name in os.listdir(base_path)
-                   if os.path.isdir(os.path.join(base_path, dir_name)) and dir_name.isdigit()])
+        def get_years():
+            # List directories only
+            return sorted([name for name in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, name))])
         
         def list_topics(year, lang):
             year_path = os.path.join(base_path, year)
