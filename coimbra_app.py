@@ -248,7 +248,7 @@ if page == texts[lang]['file_processor']:
             dfs = fillRowsInRangeForAll(dfs, lower, upper)
             dfs = concatenateRowsWithinLimits(dfs, lower, upper, units)
             dfs = replaceNewlineWithSpace(dfs)
-            #dfs = refineHeaders(dfs)
+            dfs = refineHeaders(dfs)
             dfs = addMultiindexColumns(dfs, lang)
             st.success('Processing Complete!')
 
