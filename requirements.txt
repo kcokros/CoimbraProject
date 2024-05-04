@@ -13,3 +13,4 @@ pydeck==0.8.1b0
 leafmap==0.31.9
 ipyvizzu==0.17.0
 fiona==1.9.5
+pathlib
