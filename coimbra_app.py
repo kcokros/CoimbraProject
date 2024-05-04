@@ -291,7 +291,7 @@ if page == texts[lang]['interactive_map']:
         )
 
     with col2:
-        level = st.radio(texts[lang]['select_geographical_level'], ["Municipal", "District"], key='geo_level')
+        level = st.radio(texts[lang]['select_geographical_level'], ["Municipal", "Regional"], key='geo_level')
         color_map = st.selectbox(
             texts[lang]['select_color_map'],
             options=["Warm Sunset", "Viridis", "Plasma", "Inferno", "Cividis", "Blues", "Purples"],
