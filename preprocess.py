@@ -416,6 +416,7 @@ def addMultiindexColumns(dataframes, lang):
             df.columns = multiindex_columns
 
             # Set the first column as the DataFrame index and remove its name
+            df.iloc[:, 0] = df.iloc[:, 0].str.lstrip() # remove empty spaces before string
             df = df.set_index(df.columns[0])
             df.index.name = None
             
