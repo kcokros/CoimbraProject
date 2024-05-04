@@ -71,7 +71,7 @@ texts = {
         'download_chart_png': 'Baixar gráfico como .png',
         'select_page': 'Selecione uma Página',
         'select_indicator': 'Selecione um Indicador para visualizar',
-        'select_topic': 'Selecione o Topico que deseja explorar',
+        'select_topic': 'Selecione o Tópico que deseja explorar',
         'select_year': 'Selecione o Ano',
         'select_bins': 'Selecione o Número de Divisões (Cores):',
         'show_raw_data': 'Mostrar Tabela de Dados',
@@ -370,6 +370,7 @@ if page == texts[lang]['interactive_map']:
             return sorted(os.listdir(year_path))
         
         def get_indicators(year, topic):
+            lang = st.session_state['lang']
             # Building the path to the topic directory based on the selected language
             topic_path = os.path.join(base_path, year, topic)
         
