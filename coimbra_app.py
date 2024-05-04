@@ -15,7 +15,7 @@ import leafmap.foliumap as leafmap
 import leafmap.colormaps as cm
 import seaborn as sns
 import pydeck as pdk
-from preprocess import generateDataframes, replaceNewlineWithSpace, add_multiindex_columns, fillRowsInRangeForAll, find_limits_for_all, concatenateRowsWithinLimits
+from preprocess import generateDataframes, replaceNewlineWithSpace, addMultiindexColumns, fillRowsInRangeForAll, find_limits_for_all, concatenateRowsWithinLimits, refineHeaders
 
 # Language dictionaries
 texts = {
@@ -245,7 +245,8 @@ if page == texts[lang]['file_processor']:
             dfs = fillRowsInRangeForAll(dfs, lower, upper)
             dfs = concatenateRowsWithinLimits(dfs, lower, upper, units)
             dfs = replaceNewlineWithSpace(dfs)
-            dfs = add_multiindex_columns(dfs)
+            dfs = refineHeaders(dfs)
+            dfs = addMultiindexColumns(dfs)
             st.success('Processing Complete!')
 
             # Display each DataFrame with a download button for the CSV
