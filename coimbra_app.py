@@ -31,7 +31,7 @@ texts = {
         'download_data_csv': 'Download Data as .csv',
         'download_chart_png': 'Download Chart as .png',
         'select_page': 'Select a Page',
-        'select_dataframe': 'Select an Indicator to display',
+        'select_indicator': 'Select an Indicator to display',
         'select_year': 'Select Year',
         'select_bins': 'Select Number of Bins (Colors):',
         'show_raw_data': 'Show Raw Data',
