@@ -346,11 +346,11 @@ if page == texts[lang]['interactive_map']:
                 'pt': {
                     '01': 'População',
                     '02': 'Educação',
-                    '03': 'Cultura e Desporto',
+                    '03': 'Cultura e desporto',
                     '04': 'Saúde',
-                    '05': 'Mercado de Trabalho',
-                    '06': 'Proteção Social',
-                    '07': 'Rendimento e Condições de Vida'
+                    '05': 'Mercado de trabalho',
+                    '06': 'Proteção social',
+                    '07': 'Rendimento e condições de vida'
                 }
             }[lang]
             # List all directories in the year folder
