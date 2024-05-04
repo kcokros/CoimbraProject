@@ -71,6 +71,7 @@ texts = {
         'download_chart_png': 'Baixar gráfico como .png',
         'select_page': 'Selecione uma Página',
         'select_indicator': 'Selecione um Indicador para visualizar',
+        'select_topic': 'Selecione o Topico que deseja explorar',
         'select_year': 'Selecione o Ano',
         'select_bins': 'Selecione o Número de Divisões (Cores):',
         'show_raw_data': 'Mostrar Tabela de Dados',
