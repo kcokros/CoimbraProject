@@ -5,5 +5,11 @@ geopandas==0.14.1
 folium==0.15.1
 numpy==1.26.2
 openpyxl==3.1.2
-matplotlib
-plotly
+matplotlib==3.8.4
+plotly==5.21.0
+keplergl==0.3.2
+seaborn==0.13.2
+pydeck==0.8.1b0
+leafmap==0.31.9
+ipyvizzu==0.17.0
+fiona==1.9.5
