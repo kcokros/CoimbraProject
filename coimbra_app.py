@@ -337,11 +337,11 @@ if page == texts[lang]['interactive_map']:
                 'en': {
                     '01': 'Population',
                     '02': 'Education',
-                    '03': 'Culture and Sports',
+                    '03': 'Culture and sports',
                     '04': 'Health',
-                    '05': 'Labour Market',
+                    '05': 'Labour market',
                     '06': 'Social Protection',
-                    '07': 'Income and Living Conditions'
+                    '07': 'Income and living conditions'
                 },
                 'pt': {
                     '01': 'População',
