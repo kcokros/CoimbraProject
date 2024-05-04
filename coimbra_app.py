@@ -376,7 +376,7 @@ if page == texts[lang]['interactive_map']:
         def get_indicators(topic_path):
              try:
                 return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
-            except Exception as e:
+             except Exception as e:
                 print(f"Error accessing {topic_path}: {e}")
                 return []
         
