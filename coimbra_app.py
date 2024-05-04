@@ -106,23 +106,6 @@ if 'lang' not in st.session_state:
 def toggle_language():
     st.session_state['lang'] = 'pt' if st.session_state['lang'] == 'en' else 'en'
 
-# Function to process each sheet in the Excel file
-def process_sheet(xls, sheet_name):
-    df = pd.read_excel(xls, sheet_name=sheet_name, skiprows=2)
-    new_columns = [f'{col} ({unit})' for col, unit in zip(df.columns, df.iloc[0])]
-    df.columns = new_columns
-    df = df[1:]  # Drop the row with measurement units
-    df = df.loc[:, :(df.isnull().all().cumsum() == 1).idxmax()]
-    df.dropna(axis=1, how='all', inplace=True)
-    return df
-
-# Function to save dataframe to a CSV and return it as a download link
-def to_csv(df):
-    output = BytesIO()
-    df.to_csv(output, index=False, sep=';', encoding='utf-8')
-    output.seek(0)
-    return output
-
 # Function to calculate quantile bins
 def calculate_quantile_bins(data, num_bins=5):
     quantiles = [i / num_bins for i in range(1, num_bins)]
@@ -137,7 +120,6 @@ def get_color(value, bin_edges, cmap):
     return mcolors.to_hex(cmap(norm(value)))
 
 def plot_bar_chart(df, geo_column, column, color_map, title=None, axis_orientation='vertical'):
-    """ Generate a bar chart with the specified settings. """
     plt.figure(figsize=(12, 8))
     cmap = plt.get_cmap(color_map)
     grouped_data = df.groupby(geo_column)[column].mean().sort_values()
@@ -246,7 +228,7 @@ with col2:
 # Using the language setting
 lang = st.session_state['lang']
 st.sidebar.title(texts[lang]['select_page'])  
-page = st.sidebar.radio(texts[lang]['select_page'], texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['chart_generator'], key='page_select')
+page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['chart_generator']], key='page_select')
 
 if page == texts[lang]['file_processor']:
     st.title(texts[lang]['file_processor'])
