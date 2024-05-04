@@ -291,7 +291,7 @@ if page == texts[lang]['interactive_map']:
         )
 
     with col2:
-        level = st.radio(texts[lang]['select_geographical_level'], ["Municipal", "Regional"], key='geo_level')
+        level = st.radio(texts[lang]['select_geographical_level'], ["Municipal", "District"], key='geo_level')
         color_map = st.selectbox(
             texts[lang]['select_color_map'],
             options=["Warm Sunset", "Viridis", "Plasma", "Inferno", "Cividis", "Blues", "Purples"],
@@ -336,7 +336,7 @@ if page == texts[lang]['interactive_map']:
         geo_column = 'NUTIII_DSG'
 
     # Conditional Multiselect based on selected level
-    if level == "Regional":
+    if level == "District":
         all_regions = list(portugal_geo_structure.keys())
         selected_regions = st.multiselect("Select Regions:", all_regions)
         next_level_options = []
