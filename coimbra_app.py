@@ -332,26 +332,26 @@ if page == texts[lang]['interactive_map']:
             # Initialize list to store topics
             topics = []
             # Define topic keywords based on language
-                topic_keywords = {
-                    'en': {
-                        '01': 'Population',
-                        '02': 'Education',
-                        '03': 'Culture and Sports',
-                        '04': 'Health',
-                        '05': 'Labour Market',
-                        '06': 'Social Protection',
-                        '07': 'Income and Living Conditions'
-                    },
-                    'pt': {
-                        '01': 'População',
-                        '02': 'Educação',
-                        '03': 'Cultura e Desporto',
-                        '04': 'Saúde',
-                        '05': 'Mercado de Trabalho',
-                        '06': 'Proteção Social',
-                        '07': 'Rendimento e Condições de Vida'
-                    }
-                }[lang]
+            topic_keywords = {
+                'en': {
+                    '01': 'Population',
+                    '02': 'Education',
+                    '03': 'Culture and Sports',
+                    '04': 'Health',
+                    '05': 'Labour Market',
+                    '06': 'Social Protection',
+                    '07': 'Income and Living Conditions'
+                },
+                'pt': {
+                    '01': 'População',
+                    '02': 'Educação',
+                    '03': 'Cultura e Desporto',
+                    '04': 'Saúde',
+                    '05': 'Mercado de Trabalho',
+                    '06': 'Proteção Social',
+                    '07': 'Rendimento e Condições de Vida'
+                }
+            }[lang]
             # List all directories in the year folder
             try:
                 for topic_code in os.listdir(year_path):
