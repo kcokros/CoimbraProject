@@ -360,51 +360,41 @@ if page == texts[lang]['interactive_map']:
                 for code, name in topic_keywords.items():
                     # Construct path to the topic folder using the code
                     code_path = os.path.join(year_path, code)
-                    if os.path.exists(code_path):
-                        # In each numeric folder, find the specific language-named folder
-                        for item in os.listdir(code_path):
-                            # Check if the item in the directory is the correct language folder
-                            if item == name:
-                                topics.append((item,code))                
+                    if os.path.isdir(code_path) and name in os.lisdir(code_path):
+                        topics.append((name, code))              
                 return sorted(topics, key=lambda x: x[1])
             except Exception as e:
                 print(f"Error reading directories: {e}")
                 return []
                 
             return sorted(os.listdir(year_path))
-        
-        def get_indicators(topic_path):
-             try:
+        def get_indicators(year, code):
+            topic_path = os.path.join(base_path, year, code)
+            try:
                 return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
-             except Exception as e:
+            except Exception as e:
                 print(f"Error accessing {topic_path}: {e}")
                 return []
         
-        def load_csv(year, topic, indicator):
-            # Ensure all inputs are treated as strings
-            year = str(year)
-            topic = str(topic)
-            indicator = str(indicator)
-            file_path = os.path.join(base_path, year, topic, indicator)
+        def load_csv(year, code, indicator):
+            file_path = os.path.join(base_path, year, code, indicator)
             try:
-                # Attempt to load the CSV file into a DataFrame
                 return pd.read_csv(file_path)
             except Exception as e:
                 print(f"Failed to load data from {file_path}: {e}")
-                # Optionally, return an empty DataFrame or raise an error
                 return pd.DataFrame()
         
-        # Language selection and year/topic/indicator/column selection
-        year = st.selectbox(texts[lang]['select_year'], get_years())
-        topics = list_topics(year, lang)
-        topic = st.selectbox(texts[lang]['select_topic'], [t[0] for t in topics])
-        selected_code = (code for name, code in topics if name == topic_choice)  # Get code by name
-        topic_path = os.path.join(base_path, selected_year, topic)
+        # Setup the Streamlit UI components
+        year = st.selectbox("Select Year", get_years())
+        topics = list_topics(year, st.session_state['lang'])
+        topic_choice = st.selectbox("Select Topic", [t[0] for t in topics])
+        selected_code = next(code for name, code in topics if name == topic_choice)
         
         # Display indicators based on the chosen topic and year
-        indicators = get_indicators(topic_path)
-        indicator = st.selectbox(texts[lang]['select_indicator'], indicators)
-        df = load_csv(year, topic, indicator)
+        indicators = get_indicators(year, selected_code)
+        indicator = st.selectbox("Select Indicator", indicators)
+        df = load_csv(year, selected_code, indicator)
+
         
     if df is not None:
         column_names = df.columns.tolist()
