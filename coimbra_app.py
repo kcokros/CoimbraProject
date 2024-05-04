@@ -15,6 +15,7 @@ import leafmap.foliumap as leafmap
 import leafmap.colormaps as cm
 import seaborn as sns
 import pydeck as pdk
+from locations import portugal_geo_structure 
 from preprocess import generateDataframes, replaceNewlineWithSpace, addMultiindexColumns, fillRowsInRangeForAll, find_limits_for_all, concatenateRowsWithinLimits, refineHeaders
 
 # Language dictionaries
@@ -284,7 +285,7 @@ if page == texts[lang]['interactive_map']:
         level = st.radio(texts[lang]['select_geographical_level'], ["Municipal", "District"], key='geo_level')
         color_map = st.selectbox(
             texts[lang]['select_color_map'],
-            options=["Warm Sunset", "Viridis", "Plasma", "Inferno", "Cividis"],
+            options=["Warm Sunset", "Viridis", "Plasma", "Inferno", "Cividis", "Blues", "Purples"],
             index=0  # Default to "Warm Sunset"
         )
         
@@ -310,14 +311,39 @@ if page == texts[lang]['interactive_map']:
         gdf = gpd.read_file('./maps/district.shp').to_crs(epsg=4326)
         geo_column = 'NUTIII_DSG'
 
-    # Exclude selected municipalities or districts
-    available_geographical_units = gdf[geo_column].unique()
-    excluded_units = st.multiselect(f'Select {level}s to Exclude:', available_geographical_units, default=[])
+    # Conditional Multiselect based on selected level
+    if level == "District":
+        all_regions = list(portugal_geo_structure.keys())
+        selected_regions = st.multiselect("Select Regions:", all_regions)
+        next_level_options = []
+        for region in selected_regions:
+            next_level_options.extend(portugal_geo_structure[region].keys())
+    elif level == "Municipal":
+        all_regions = list(portugal_geo_structure.keys())
+        selected_regions = st.multiselect("Select Regions:", all_regions)
+        district_options = []
+        for region in selected_regions:
+            for district in portugal_geo_structure[region].keys():
+                district_options.append(district)
+        # For Municipal level, change multiselect to "Select District"
+        selected_districts = st.multiselect("Select Districts:", sorted(set(district_options)))
+        next_level_options = []
+        for district in selected_districts:
+            for region in selected_regions:
+                if district in portugal_geo_structure[region]:
+                    next_level_options.extend(portugal_geo_structure[region][district])
 
-    # Filter the GeoDataFrame to exclude the selected units
-    gdf = gdf[~gdf[geo_column].isin(excluded_units)]
-    
-    # Merge data based on the level, using 'Border' as the common column in the Excel data
+    # Multiselect for including districts or municipalities
+    included_units = st.multiselect(f"Select {level}s to Include:", sorted(set(next_level_options)))
+
+    # Load and filter geographical data
+    geo_data_path = './maps/municipal.shp' if level == "Municipal" else './maps/district.shp'
+    gdf = gpd.read_file(geo_data_path).to_crs(epsg=4326)
+    geo_column = 'NAME_2_cor' if level == "Municipal" else 'NUTIII_DSG'
+
+    if included_units:
+        gdf = gdf[gdf[geo_column].isin(included_units)]
+
     merged = gdf.merge(df, how='left', left_on=geo_column, right_on='Border')
 
     if show_3d:
@@ -341,7 +367,9 @@ if page == texts[lang]['interactive_map']:
                 "Viridis": plt.get_cmap('viridis'),
                 "Plasma": plt.get_cmap('plasma'),
                 "Inferno": plt.get_cmap('inferno'),
-                "Cividis": plt.get_cmap('cividis')
+                "Cividis": plt.get_cmap('cividis'),
+                "Blues": plt.get_cmap('Blues'),
+                "Purples": plt.get_cmap('Purples')
             }
             return cmap_dict.get(cmap_name, plt.get_cmap('YlOrRd'))
 
@@ -395,7 +423,9 @@ if page == texts[lang]['interactive_map']:
             "Viridis": "viridis",
             "Plasma": "plasma",
             "Inferno": "inferno",
-            "Cividis": "cividis"
+            "Cividis": "cividis",
+            "Blues": "Blues",
+            "Purples": "Purples"
         }.get(color_map, "YlOrRd")
         
         geo_column = 'NAME_2_cor' if level == "Municipal" else 'NUTIII_DSG'
