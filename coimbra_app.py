@@ -369,15 +369,15 @@ if page == texts[lang]['interactive_map']:
                 
             return sorted(os.listdir(year_path))
         
-        def get_indicators(year, topic, lang):
+        def get_indicators(year, lang, topic_path):
             lang = st.session_state['lang']
             # Building the path to the topic directory based on the selected language
-            topic_path = os.path.join(base_path, year, lang, topic)
+            indicator_path = os.path.join(topic_path, list_topics(year, lang))
         
             # Check if the directory exists and then list all CSV files in it
             try:
-                if os.path.exists(topic_path):
-                    return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
+                if os.path.exists(indicator_path):
+                    return sorted([f for f in os.listdir(indicator_path) if f.endswith('.csv')])
                 else:
                     return []
             except Exception as e:
