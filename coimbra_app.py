@@ -33,6 +33,7 @@ texts = {
         'select_page': 'Select a Page',
         'select_indicator': 'Select an Indicator to display',
         'select_year': 'Select Year',
+        'select_topic': 'Select a Topic to explore',
         'select_bins': 'Select Number of Bins (Colors):',
         'show_raw_data': 'Show Raw Data',
         'select_geographical_level': 'Select Geographical Level',
@@ -319,7 +320,31 @@ if page == texts[lang]['interactive_map']:
         df = st.session_state['processed_data'][selected_key]
         #st.write(f"Displaying data for: {selected_title}")        
     else:
-        # Load data
+        # Assume the base path to the 'Preloaded' folder
+        base_path = "./Preloaded"
+        
+        def get_years():
+            return sorted(os.listdir(base_path))
+        
+        def get_topics(year):
+            year_path = os.path.join(base_path, year)
+            return sorted(os.listdir(year_path))
+        
+        def get_indicators(year, topic, lang):
+            topic_path = os.path.join(base_path, year, topic, lang)
+            return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
+        
+        def load_csv(year, topic, lang, indicator):
+            file_path = os.path.join(base_path, year, topic, lang, indicator)
+            return pd.read_csv(file_path)
+        
+        # Language selection and year/topic/indicator/column selection
+        year = st.sidebar.selectbox("Select Year", options=get_years())
+        topic = st.sidebar.selectbox("Select Topic", options=get_topics(year))
+        indicator = st.sidebar.selectbox("Select Indicator", options=get_indicators(year, topic, "Education" if lang == "English" else "Educação"))
+        df = load_csv(year, topic, "Education" if lang == "English" else "Educação", indicator)
+        column = st.sidebar.selectbox("Select Column", options=df.columns)
+# Load data
         df_path = f'tables/{year}.xlsx'
         df = pd.read_excel(df_path)
         
