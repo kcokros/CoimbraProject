@@ -336,7 +336,7 @@ if page == texts[lang]['interactive_map']:
         geo_column = 'NUTIII_DSG'
 
     # Conditional Multiselect based on selected level
-    if level == "District":
+    if level == "Regional":
         all_regions = list(portugal_geo_structure.keys())
         selected_regions = st.multiselect("Select Regions:", all_regions)
         next_level_options = []
