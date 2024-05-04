@@ -6,6 +6,8 @@ import matplotlib.colors as mcolors
 import matplotlib.colorbar as mcolorbar
 from io import BytesIO
 import json
+import os
+import base64
 from keplergl import KeplerGl
 import numpy as n
 import folium
@@ -13,6 +15,7 @@ import leafmap.foliumap as leafmap
 import leafmap.colormaps as cm
 import seaborn as sns
 import pydeck as pdk
+from preprocess import generateDataframes, replaceNewlineWithSpace, add_multiindex_columns, fillRowsInRangeForAll, find_limits_for_all, concatenateRowsWithinLimits
 
 # Language dictionaries
 texts = {
@@ -24,6 +27,8 @@ texts = {
         'chart_generator': 'Chart Generator',
         'upload_excel': 'Upload your Excel file',
         'download_csv': 'Download as CSV',
+        'download_data_csv': 'Download Data as .csv'
+        'download_chart_png': 'Download Chart as .png',
         'select_page': 'Select a Page',
         'select_year': 'Select Year',
         'select_bins': 'Select Number of Bins (Colors):',
@@ -59,6 +64,8 @@ texts = {
         'chart_generator': 'Gerador de Gráficos',
         'upload_excel': 'Carregue o seu ficheiro Excel',
         'download_csv': 'Baixar como CSV',
+        'download_data_csv': 'Baixar Dados como .csv'
+        'download_chart_png': 'Baixar gráfico como .png',
         'select_page': 'Selecione uma Página',
         'select_year': 'Selecione o Ano',
         'select_bins': 'Selecione o Número de Divisões (Cores):',
@@ -242,22 +249,34 @@ st.sidebar.title(texts[lang]['select_page'])
 page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['chart_generator']], key='page_select')
 
 if page == texts[lang]['file_processor']:
-    st.title(texts[lang]['file_processor']) 
+    st.title(texts[lang]['file_processor'])
     uploaded_file = st.file_uploader(texts[lang]['upload_excel'], type=["xlsx"])
+    
     if uploaded_file is not None:
         xls = pd.ExcelFile(uploaded_file)
-        header_row = 1 if lang == 'pt' else 0 
-        for sheet_name in xls.sheet_names:
-            df = process_sheet(xls, sheet_name, header_row)
-            st.write(f"Preview of {sheet_name}:")
-            st.dataframe(df.head())
-            csv = to_csv(df)
-            st.download_button(
-                label=texts[lang]['download_csv'].format(sheet_name=sheet_name),
-                data=csv,
-                file_name=f"{sheet_name}.csv",
-                mime='text/csv',
-            )
+        
+        # Process the file
+        try:
+            # Generate DataFrames and extract units
+            dfs, units = generateDataframes(xls, xls.sheet_names)
+            lower, upper = find_limits_for_all(dfs)
+            dfs = fillRowsInRangeForAll(dfs, lower, upper)
+            dfs = concatenateRowsWithinLimits(dfs, lower, upper, units)
+            dfs = replaceNewlineWithSpace(dfs)
+            dfs = add_multiindex_columns(dfs)
+            st.success('Processing Complete!')
+
+            # Display each DataFrame with a download button for the CSV
+            for (pt_title, en_title), df in dfs.items():
+                st.subheader(f'DataFrame: {en_title}')
+                st.dataframe(df)
+                to_csv = df.to_csv(index=False).encode('utf-8')
+                b64 = base64.b64encode(to_csv).decode()  # some browsers need base64 encoding
+                href = f'<a href="data:file/csv;base64,{b64}" download="{en_title.replace("/", "_")}.csv">Download {en_title.replace("/", "_")}.csv</a>'
+                st.markdown(href, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
 
 if page == texts[lang]['interactive_map']:
     st.title(texts[lang]['interactive_map'])
