@@ -387,7 +387,7 @@ def replaceNewlineWithSpace(dataframes):
 
     return dataframes
 
-def addMultiindexColumns(dataframes):
+def addMultiindexColumns(dataframes, lang):
     """
     Converts the first two rows of each DataFrame into a MultiIndex for the columns,
     sets the first column as the index, and updates the DataFrames in place.
@@ -421,6 +421,13 @@ def addMultiindexColumns(dataframes):
 
             # Update the DataFrame in place in the dictionary
             dataframes[key] = df
+            
+            if lang == 'en':
+                df.columns = df.columns.get_level_values(1)  # English titles
+            else:
+                df.columns = df.columns.get_level_values(0)  # Portuguese titles
+
+            dataframes[key] = df.reset_index(drop=True)
 
         except Exception as e:
             print(f"Error setting MultiIndex in DataFrame with key {key}: {e}")
