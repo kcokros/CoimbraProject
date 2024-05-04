@@ -369,10 +369,10 @@ if page == texts[lang]['interactive_map']:
                 
             return sorted(os.listdir(year_path))
         
-        def get_indicators(year, lang, topic_path):
-            lang = st.session_state['lang']
+        def get_indicators(topic):
+            lang_dir = st.session_state['lang']
             # Building the path to the topic directory based on the selected language
-            indicator_path = os.path.join(topic_path, list_topics(year, lang))
+            indicator_path = os.path.join(base_path, year, topic)
         
             # Check if the directory exists and then list all CSV files in it
             try:
@@ -403,7 +403,7 @@ if page == texts[lang]['interactive_map']:
         topics = list_topics(year, lang)
         topic = st.selectbox(texts[lang]['select_topic'], topics)
         # Display indicators based on the chosen topic and year
-        indicators = get_indicators(year, topic, lang)
+        indicators = get_indicators(topic)
         indicator = st.selectbox(texts[lang]['select_indicator'], indicators)
         df = load_csv(year, topic, indicator)
         
