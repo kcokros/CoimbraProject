@@ -368,7 +368,7 @@ if page == texts[lang]['interactive_map']:
                 return []
                 
             return sorted(os.listdir(year_path))
-                def get_indicators(topic_path):
+        def get_indicators(topic_path):
              try:
                 return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
              except Exception as e:
