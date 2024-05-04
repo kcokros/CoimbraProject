@@ -364,11 +364,13 @@ if page == texts[lang]['interactive_map']:
     geo_data_path = './maps/municipal.shp' if level == "Municipal" else './maps/district.shp'
     gdf = gpd.read_file(geo_data_path).to_crs(epsg=4326)
     geo_column = 'NAME_2_cor' if level == "Municipal" else 'NUTIII_DSG'
+    df = df.reset_index()
+    df.rename(columns = {'index':'Border', inplace = True)
 
     if included_units:
         gdf = gdf[gdf[geo_column].isin(included_units)]
 
-    merged = gdf.merge(df, how='left', left_on=geo_column, right_on=df.columns[0])
+    merged = gdf.merge(df, how='left', left_on=geo_column, right_on='Border')
 
     if show_3d:
         deck_gl = generate_3d_map(merged, column_name, elevation_scale)
@@ -401,7 +403,7 @@ if page == texts[lang]['interactive_map']:
         current_cmap = get_colormap(color_map)
 
         # Setup the GeoJson layer with conditional tooltips based on the selected level
-        tooltip_fields = [df.columns[0], column_name]  # Tooltip shows the Border and the data column
+        tooltip_fields = ['Border', column_name]  # Tooltip shows the Border and the data column
         tooltip_aliases = [level, column_name.title()]  # Alias reflects the level
 
         geojson_layer = folium.GeoJson(
