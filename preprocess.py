@@ -420,9 +420,9 @@ def addMultiindexColumns(dataframes, lang):
             df.index.name = None
             
             if lang == 'en':
-                df.columns = df.columns.get_level_values(1)  # English titles
+                df.columns = df.columns.get_level_values(0)  # English titles
             else:
-                df.columns = df.columns.get_level_values(0)  # Portuguese titles
+                df.columns = df.columns.get_level_values(1)  # Portuguese titles
 
             dataframes[key] = df.reset_index(drop=True)
 
