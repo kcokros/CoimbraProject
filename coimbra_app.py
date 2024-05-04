@@ -322,12 +322,35 @@ if page == texts[lang]['interactive_map']:
     else:
         # Assume the base path to the 'Preloaded' folder
         base_path = "./Preloaded"
+
+        def get_years(base_path):
+            return sorted([dir_name for dir_name in os.listdir(base_path)
+                   if os.path.isdir(os.path.join(base_path, dir_name)) and dir_name.isdigit()])
         
-        def get_years():
-            return sorted(os.listdir(base_path))
-        
-        def get_topics(year):
+        def list_topics(year, lang):
             year_path = os.path.join(base_path, year)
+
+            # Initialize list to store topics
+            topics = []
+
+            # List all directories in the year folder
+            try:
+                numbered_folders = [os.path.join(year_path, name) for name in os.listdir(year_path) if os.path.join(year_path, name))]
+                for folder in numbered_folders:
+                    # Depending on the language, append appropriate topic name if it exists
+                    if lang == 'en':
+                        for item in os.listdir(folder):
+                            if "Population" in item or any(other_topic_keyword in item for other_topic_keyword in ['Education', 'Culture and sports', 'Saúde', 'Labour market', 'Social Protection','Income and living conditions']):
+                                topics.append(item)
+                    else:
+                        for item in os.listdir(folder):
+                            if "População" in item or any(other_topic_keyword in item for other_topic_keyword in ['Educação', 'Cultura e desporto', 'Sa', 'Mercado de trabalho', 'Proteção Social','Rendimento e condições de vida']):
+                                topics.append(item)
+                return sorted(set(topics))
+            except Exception as e:
+                print(f"Error reading directories: {e}")
+                return []
+                
             return sorted(os.listdir(year_path))
         
         def get_indicators(year, topic, lang):
@@ -339,7 +362,7 @@ if page == texts[lang]['interactive_map']:
             return pd.read_csv(file_path)
         
         # Language selection and year/topic/indicator/column selection
-        year = st.sidebar.selectbox("Select Year", options=get_years())
+        year = st.sidebar.selectbox(texts[lang]['select_year'], options=get_years())
         topic = st.sidebar.selectbox("Select Topic", options=get_topics(year))
         indicator = st.sidebar.selectbox("Select Indicator", options=get_indicators(year, topic, "Education" if lang == "English" else "Educação"))
         df = load_csv(year, topic, "Education" if lang == "English" else "Educação", indicator)
