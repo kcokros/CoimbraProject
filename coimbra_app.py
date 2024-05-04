@@ -388,6 +388,10 @@ if page == texts[lang]['interactive_map']:
 
         
         def load_csv(year, topic, indicator):
+            # Ensure all inputs are treated as strings
+            year = str(year)
+            topic = str(topic)
+            indicator = str(indicator)
             file_path = os.path.join(base_path, year, topic, indicator)
             try:
                 # Attempt to load the CSV file into a DataFrame
