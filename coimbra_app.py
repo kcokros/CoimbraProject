@@ -332,28 +332,26 @@ if page == texts[lang]['interactive_map']:
             # Initialize list to store topics
             topics = []
             # Define topic keywords based on language
-            topic_keywords_en = {
-                '01': 'Population',
-                '02': 'Education',
-                '03': 'Culture and sports',
-                '04': 'Health',
-                '05': 'Labour market',
-                '06': 'Social Protection',
-                '07': 'Income and living conditions'
-            }
-        
-            topic_keywords_pt = {
-                '01': 'População',
-                '02': 'Educação',
-                '03': 'Cultura e desporto',
-                '04': 'Saúde',
-                '05': 'Mercado de trabalho',
-                '06': 'Proteção Social',
-                '07': 'Rendimento e condições de vida'
-            }
-
-            # Select the appropriate dictionary based on the language
-            topic_keywords = topic_keywords_en if lang == 'en' else topic_keywords_pt
+                topic_keywords = {
+                    'en': {
+                        '01': 'Population',
+                        '02': 'Education',
+                        '03': 'Culture and Sports',
+                        '04': 'Health',
+                        '05': 'Labour Market',
+                        '06': 'Social Protection',
+                        '07': 'Income and Living Conditions'
+                    },
+                    'pt': {
+                        '01': 'População',
+                        '02': 'Educação',
+                        '03': 'Cultura e Desporto',
+                        '04': 'Saúde',
+                        '05': 'Mercado de Trabalho',
+                        '06': 'Proteção Social',
+                        '07': 'Rendimento e Condições de Vida'
+                    }
+                }[lang]
             # List all directories in the year folder
             try:
                 for topic_code in os.listdir(year_path):
@@ -362,8 +360,7 @@ if page == texts[lang]['interactive_map']:
                         # Check each subfolder for a language-specific match
                         for item in os.listdir(topic_path):
                             if item in topic_keywords.values():
-                                topics.append(item)
-                                
+                                topics.append(item)                
                 return sorted(set(topics))
             except Exception as e:
                 print(f"Error reading directories: {e}")
@@ -371,24 +368,45 @@ if page == texts[lang]['interactive_map']:
                 
             return sorted(os.listdir(year_path))
         
-        def get_indicators(year, topic, lang):
-            topic_path = os.path.join(base_path, year, topic, lang)
-            return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
+        def get_indicators(year, topic):
+            # Assuming 'lang' is part of the session state and managed elsewhere in your app
+            lang = st.session_state['lang']
+        
+            # Building the path to the topic directory based on the selected language
+            topic_path = os.path.join(base_path, year, topic)
+        
+            # Check if the directory exists and then list all CSV files in it
+            try:
+                if os.path.exists(topic_path):
+                    return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
+                else:
+                    print(f"Directory does not exist: {topic_path}")
+                    return []
+            except Exception as e:
+                print(f"Error accessing {topic_path}: {e}")
+                return []
+
         
         def load_csv(year, topic, lang, indicator):
-            file_path = os.path.join(base_path, year, topic, lang, indicator)
+            file_path = os.path.join(base_path, year, topic, indicator)
+            try:
+                # Attempt to load the CSV file into a DataFrame
+                df = pd.read_csv(file_path)
+                return df
+            except Exception as e:
+                print(f"Failed to load data from {file_path}: {e}")
+                # Optionally, return an empty DataFrame or raise an error
+                return pd.DataFrame()
             return pd.read_csv(file_path)
         
         # Language selection and year/topic/indicator/column selection
         year = st.sidebar.selectbox(texts[lang]['select_year'], options=get_years())
         topics = list_topics(year, lang)
         topic = st.sidebar.selectbox(texts[lang]['select_topic'], options=topics)
-        indicator = st.sidebar.selectbox("Select Indicator", options=get_indicators(year, topic, "Education" if lang == "English" else "Educação"))
-        df = load_csv(year, topic, "Education" if lang == "English" else "Educação", indicator)
-        column = st.sidebar.selectbox("Select Column", options=df.columns)
-# Load data
-        df_path = f'tables/{year}.xlsx'
-        df = pd.read_excel(df_path)
+        # Display indicators based on the chosen topic and year
+        indicators = get_indicators(year, topic)
+        indicator = st.sidebar.selectbox(texts[lang]['select_indicator'], options=indicators)
+        df = load_csv(year, topic, indicator)
         
     if df is not None:
         column_names = df.columns.tolist()
