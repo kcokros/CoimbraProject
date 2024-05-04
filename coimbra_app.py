@@ -253,10 +253,15 @@ if page == texts[lang]['file_processor']:
             for (pt_title, en_title), df in dfs.items():
                 st.subheader(f'DataFrame: {en_title}')
                 st.dataframe(df)
-                to_csv = df.to_csv(index=False).encode('utf-8')
-                b64 = base64.b64encode(to_csv).decode()  # some browsers need base64 encoding
-                href = f'<a href="data:file/csv;base64,{b64}" download="{en_title.replace("/", "_")}.csv">Download {en_title.replace("/", "_")}.csv</a>'
-                st.markdown(href, unsafe_allow_html=True)
+
+                # Convert DataFrame to CSV, ensure index is included if it needs to be preserved
+                csv = df.to_csv(index=True).encode('utf-8-sig')  # Ensure index is included if needed
+                st.download_button(
+                    label=f"Download {en_title.replace('/', '_')}.csv",
+                    data=csv,
+                    file_name=f"{en_title.replace('/', '_')}.csv",
+                    mime='text/csv'
+                )
 
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
