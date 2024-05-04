@@ -349,20 +349,24 @@ if page == texts[lang]['interactive_map']:
                     '03': 'Cultura e desporto',
                     '04': 'Saúde',
                     '05': 'Mercado de trabalho',
-                    '06': 'Proteção social',
+                    '06': 'Proteção Social',
                     '07': 'Rendimento e condições de vida'
                 }
             }[lang]
-            # List all directories in the year folder
+
+            # Get the directory names inside each numeric folder based on language
             try:
-                for topic_code in os.listdir(year_path):
-                    topic_path = os.path.join(year_path, topic_code)
-                    if os.path.isdir(topic_path):
-                        # Check each subfolder for a language-specific match
-                        for item in os.listdir(topic_path):
-                            if item in topic_keywords.values():
+                # Loop through the topic codes based on dictionary keys which are numeric folders
+                for code, name in topic_keywords.items():
+                    # Construct path to the topic folder using the code
+                    code_path = os.path.join(year_path, code)
+                    if os.path.exists(code_path):
+                        # In each numeric folder, find the specific language-named folder
+                        for item in os.listdir(code_path):
+                            # Check if the item in the directory is the correct language folder
+                            if item == name:
                                 topics.append(item)                
-                return sorted(set(topics))
+                return sorted(topics)
             except Exception as e:
                 print(f"Error reading directories: {e}")
                 return []
