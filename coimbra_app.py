@@ -321,7 +321,7 @@ if page == texts[lang]['interactive_map']:
         #st.write(f"Displaying data for: {selected_title}")        
     else:
         # Assume the base path to the 'Preloaded' folder
-        base_path = "./Preloaded"
+        base_path = "Preloaded"
 
         def get_years(base_path):
             return sorted([dir_name for dir_name in os.listdir(base_path)
