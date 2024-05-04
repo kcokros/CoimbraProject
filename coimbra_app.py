@@ -388,12 +388,12 @@ if page == texts[lang]['interactive_map']:
         year = st.selectbox("Select Year", get_years())
         topics = list_topics(year, st.session_state['lang'])
         topic_choice = st.selectbox("Select Topic", [t[0] for t in topics])
-        selected_code = next(code for name, code in topics if name == topic_choice)
+        #selected_code = next(code for name, code in topics if name == topic_choice)
         
         # Display indicators based on the chosen topic and year
-        indicators = get_indicators(year, selected_code)
-        indicator = st.selectbox("Select Indicator", indicators)
-        df = load_csv(year, selected_code, indicator)
+        #indicators = get_indicators(year, selected_code)
+        #indicator = st.selectbox("Select Indicator", indicators)
+        #df = load_csv(year, selected_code, indicator)
 
         
     if df is not None:
