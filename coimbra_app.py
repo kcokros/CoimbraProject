@@ -365,7 +365,7 @@ if page == texts[lang]['interactive_map']:
     gdf = gpd.read_file(geo_data_path).to_crs(epsg=4326)
     geo_column = 'NAME_2_cor' if level == "Municipal" else 'NUTIII_DSG'
     df = df.reset_index()
-    df.rename(columns = {'index':'Border', inplace = True)
+    df.rename(columns = {'index':'Border'}, inplace = True)
 
     if included_units:
         gdf = gdf[gdf[geo_column].isin(included_units)]
