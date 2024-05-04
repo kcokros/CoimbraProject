@@ -27,7 +27,7 @@ texts = {
         'chart_generator': 'Chart Generator',
         'upload_excel': 'Upload your Excel file',
         'download_csv': 'Download as CSV',
-        'download_data_csv': 'Download Data as .csv'
+        'download_data_csv': 'Download Data as .csv',
         'download_chart_png': 'Download Chart as .png',
         'select_page': 'Select a Page',
         'select_year': 'Select Year',
@@ -64,7 +64,7 @@ texts = {
         'chart_generator': 'Gerador de Gráficos',
         'upload_excel': 'Carregue o seu ficheiro Excel',
         'download_csv': 'Baixar como CSV',
-        'download_data_csv': 'Baixar Dados como .csv'
+        'download_data_csv': 'Baixar Dados como .csv',
         'download_chart_png': 'Baixar gráfico como .png',
         'select_page': 'Selecione uma Página',
         'select_year': 'Selecione o Ano',
