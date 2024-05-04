@@ -418,9 +418,6 @@ def addMultiindexColumns(dataframes, lang):
             # Set the first column as the DataFrame index and remove its name
             df = df.set_index(df.columns[0])
             df.index.name = None
-
-            # Update the DataFrame in place in the dictionary
-            dataframes[key] = df
             
             if lang == 'en':
                 df.columns = df.columns.get_level_values(1)  # English titles
@@ -429,6 +426,7 @@ def addMultiindexColumns(dataframes, lang):
 
             dataframes[key] = df.reset_index(drop=True)
 
+            dataframes[key] = df
         except Exception as e:
             print(f"Error setting MultiIndex in DataFrame with key {key}: {e}")
             continue
