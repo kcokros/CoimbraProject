@@ -246,7 +246,7 @@ with col2:
 # Using the language setting
 lang = st.session_state['lang']
 st.sidebar.title(texts[lang]['select_page'])  
-page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['chart_generator']], key='page_select')
+page = st.sidebar.radio(texts[lang]['select_page'], texts[lang]['file_processor'], texts[lang]['interactive_map'], texts[lang]['district_map'], texts[lang]['chart_generator']], key='page_select')
 
 if page == texts[lang]['file_processor']:
     st.title(texts[lang]['file_processor'])
