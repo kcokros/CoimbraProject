@@ -17,6 +17,7 @@ import seaborn as sns
 import pydeck as pdk
 from locations import portugal_geo_structure 
 from preprocess import generateDataframes, replaceNewlineWithSpace, addMultiindexColumns, fillRowsInRangeForAll, find_limits_for_all, concatenateRowsWithinLimits, refineHeaders
+from pathlib import Path
 
 # Language dictionaries
 texts = {
@@ -354,18 +355,29 @@ if page == texts[lang]['interactive_map']:
                 }
             }[lang]
 
-            # Get the directory names inside each numeric folder based on language
-            try:
-                # Loop through the topic codes based on dictionary keys which are numeric folders
-                for code, name in topic_keywords.items():
-                    # Construct path to the topic folder using the code
-                    code_path = os.path.join(year_path, code)
-                    if os.path.isdir(code_path) and name in os.lisdir(code_path):
-                        topics.append((name, code))              
-                return sorted(topics, key=lambda x: x[1])
-            except Exception as e:
-                print(f"Error reading directories: {e}")
-                return []
+            for code, name in topic_keywords.items():
+                topic_path = Path(year_path) / code
+                if topic_path.exists() and name in os.listdir(topic_path):
+                    topics.append(name)
+            return sorted(topics)
+        
+        def get_indicators(year, topic, lang):
+            topic_path = Path(base_path) / year / topic
+            return sorted([f.name for f in topic_path.glob('*.csv')])
+        
+        def load_data(file_path):
+            return pd.read_csv(file_path)
+
+        # Streamlit widgets to select year, topic, and indicator
+        year = st.sidebar.selectbox("Select Year", get_years())
+        topics = list_topics(year, st.session_state['lang'])
+        topic = st.sidebar.selectbox("Select Topic", topics)
+        indicators = get_indicators(year, topic, st.session_state['lang'])
+        selected_indicator = st.sidebar.selectbox("Select Indicator", indicators)
+        
+        # Load the selected data
+        data_path = Path(base_path) / year / topic / selected_indicator
+        df = load_data(data_path)
                 
             return sorted(os.listdir(year_path))
         def get_indicators(topic_path):
