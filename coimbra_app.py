@@ -335,7 +335,7 @@ if page == texts[lang]['interactive_map']:
 
             # List all directories in the year folder
             try:
-                numbered_folders = [os.path.join(year_path, name) for name in os.listdir(year_path) if os.path.join(year_path, name))]
+                numbered_folders = [os.path.join(year_path, name) for name in os.listdir(year_path) if os.path.join(year_path, name)]
                 for folder in numbered_folders:
                     # Depending on the language, append appropriate topic name if it exists
                     if lang == 'en':
