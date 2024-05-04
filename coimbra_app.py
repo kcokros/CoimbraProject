@@ -365,25 +365,17 @@ if page == texts[lang]['interactive_map']:
                         for item in os.listdir(code_path):
                             # Check if the item in the directory is the correct language folder
                             if item == name:
-                                topics.append(item)                
-                return sorted(topics)
+                                topics.append((item,code))                
+                return sorted(topics, key=lambda x: x[1])
             except Exception as e:
                 print(f"Error reading directories: {e}")
                 return []
                 
             return sorted(os.listdir(year_path))
         
-        def get_indicators(topic):
-            lang_dir = st.session_state['lang']
-            # Building the path to the topic directory based on the selected language
-            indicator_path = os.path.join(base_path, year, topic)
-        
-            # Check if the directory exists and then list all CSV files in it
-            try:
-                if os.path.exists(indicator_path):
-                    return sorted([f for f in os.listdir(indicator_path) if f.endswith('.csv')])
-                else:
-                    return []
+        def get_indicators(topic_path):
+             try:
+                return sorted([f for f in os.listdir(topic_path) if f.endswith('.csv')])
             except Exception as e:
                 print(f"Error accessing {topic_path}: {e}")
                 return []
@@ -405,9 +397,12 @@ if page == texts[lang]['interactive_map']:
         # Language selection and year/topic/indicator/column selection
         year = st.selectbox(texts[lang]['select_year'], get_years())
         topics = list_topics(year, lang)
-        topic = st.selectbox(texts[lang]['select_topic'], topics)
+        topic = st.selectbox(texts[lang]['select_topic'], [t[0] for t in topics])
+        selected_code = next(code for name, code in topics if name == topic_choice)  # Get code by name
+        topic_path = os.path.join(base_path, selected_year, selected_code, topic_choice)
+        
         # Display indicators based on the chosen topic and year
-        indicators = get_indicators(topic)
+        indicators = get_indicators(topic_path)
         indicator = st.selectbox(texts[lang]['select_indicator'], indicators)
         df = load_csv(year, topic, indicator)
         
