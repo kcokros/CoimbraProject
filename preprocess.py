@@ -387,41 +387,75 @@ def replaceNewlineWithSpace(dataframes):
 
     return dataframes
 
-def add_multiindex_columns(dataframes):
+def addMultiindexColumns(dataframes):
     """
-    Adds multiindex columns based on the first two rows of each DataFrame, assuming these rows contain header information.
+    Converts the first two rows of each DataFrame into a MultiIndex for the columns,
+    sets the first column as the index, and updates the DataFrames in place.
 
-    Args:
-    dataframes (dict): Dictionary containing data frames to be updated.
+    Parameters:
+        dataframes (dict): A dictionary of pandas DataFrames, keyed by identifiers.
 
     Returns:
-    dict: The updated dictionary of data frames with MultiIndex columns.
+        dict: The dictionary of DataFrames with MultiIndex columns and updated indices.
+
+    Raises:
+        ValueError: If any DataFrame does not have at least two rows or the required columns to set as MultiIndex.
     """
     for key, df in dataframes.items():
         if df.empty:
-            continue  # Skip empty dataframes to avoid processing errors
+            print(f"Warning: DataFrame with key {key} is empty. No MultiIndex conversion performed.")
+            continue
 
-        # Process headers to form a MultiIndex
-        header_rows = df.iloc[0:2]
-        headers = []
-        for col in range(len(header_rows.columns)):
-            header_components = [str(header_rows.iloc[j, col]) for j in range(len(header_rows)) if pd.notna(header_rows.iloc[j, col])]
-            header_tuple = tuple(header_components)
-            if len(header_tuple) == 1:
-                header_tuple = (header_tuple[0], '')
-            elif len(header_tuple) == 0:
-                header_tuple = ('', '')
-            headers.append(header_tuple)
+        if len(df) < 2:
+            raise ValueError(f"DataFrame with key {key} does not have enough rows to set a MultiIndex.")
 
-        # Ensure unique headers, preserve order, and create MultiIndex
-        headers = list(dict.fromkeys(headers))  # Remove duplicates
-        multiindex_columns = pd.MultiIndex.from_tuples(headers, names=["Portuguese", "English"])
-        df = df.iloc[2:]  # Remove header rows
-        df.columns = multiindex_columns
-        dataframes[key] = df
+        try:
+            # Use the first two rows to create a MultiIndex for the columns
+            multiindex_columns = pd.MultiIndex.from_arrays(df.iloc[0:2].values, names=["Portuguese", "English"])
+            df = df.iloc[2:]  # Remove the rows used for the MultiIndex
+            df.columns = multiindex_columns
+
+            # Set the first column as the DataFrame index and remove its name
+            df = df.set_index(df.columns[0])
+            df.index.name = None
+
+            # Update the DataFrame in place in the dictionary
+            dataframes[key] = df
+
+        except Exception as e:
+            print(f"Error setting MultiIndex in DataFrame with key {key}: {e}")
+            continue
 
     return dataframes
 
+def refineHeaders(dataframes):
+    """
+    Refines each DataFrame by replacing the second row with the last row and removing rows with empty cells at the start.
+
+    Parameters:
+        dataframes (dict): A dictionary of pandas DataFrames, keyed by identifiers.
+
+    Returns:
+        dict: The dictionary of refined DataFrames.
+    """
+    for key, df in dataframes.items():
+        if df.empty:
+            print(f"Warning: DataFrame with key {key} is empty. No refinement performed.")
+            continue
+
+        # Replace the second row with the last row
+        df.iloc[1] = df.iloc[-1]
+
+        # Remove the duplicated last row since it's now moved to the second position
+        df = df.drop(df.index[-1])
+
+        # Remove all rows that have an empty cell in the first column, except for the first two rows
+        df = df.drop(df[(df.iloc[:, 0].isna()) & (df.index > 1)].index)
+
+        # Update the DataFrame in the dictionary after modifications
+        dataframes[key] = df
+
+    return dataframes
 
 
 if __name__ == "__main__":
