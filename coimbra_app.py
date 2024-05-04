@@ -331,20 +331,39 @@ if page == texts[lang]['interactive_map']:
 
             # Initialize list to store topics
             topics = []
+            # Define topic keywords based on language
+            topic_keywords_en = {
+                '01': 'Population',
+                '02': 'Education',
+                '03': 'Culture and sports',
+                '04': 'Health',
+                '05': 'Labour market',
+                '06': 'Social Protection',
+                '07': 'Income and living conditions'
+            }
+        
+            topic_keywords_pt = {
+                '01': 'População',
+                '02': 'Educação',
+                '03': 'Cultura e desporto',
+                '04': 'Saúde',
+                '05': 'Mercado de trabalho',
+                '06': 'Proteção Social',
+                '07': 'Rendimento e condições de vida'
+            }
 
+            # Select the appropriate dictionary based on the language
+            topic_keywords = topic_keywords_en if lang == 'en' else topic_keywords_pt
             # List all directories in the year folder
             try:
-                numbered_folders = [os.path.join(year_path, name) for name in os.listdir(year_path) if os.path.join(year_path, name)]
-                for folder in numbered_folders:
-                    # Depending on the language, append appropriate topic name if it exists
-                    if lang == 'en':
-                        for item in os.listdir(folder):
-                            if "Population" in item or any(other_topic_keyword in item for other_topic_keyword in ['Education', 'Culture and sports', 'Saúde', 'Labour market', 'Social Protection','Income and living conditions']):
+                for topic_code in os.listdir(year_path):
+                    topic_path = os.path.join(year_path, topic_code)
+                    if os.path.isdir(topic_path):
+                        # Check each subfolder for a language-specific match
+                        for item in os.listdir(topic_path):
+                            if item in topic_keywords.values():
                                 topics.append(item)
-                    else:
-                        for item in os.listdir(folder):
-                            if "População" in item or any(other_topic_keyword in item for other_topic_keyword in ['Educação', 'Cultura e desporto', 'Sa', 'Mercado de trabalho', 'Proteção Social','Rendimento e condições de vida']):
-                                topics.append(item)
+                                
                 return sorted(set(topics))
             except Exception as e:
                 print(f"Error reading directories: {e}")
@@ -362,7 +381,8 @@ if page == texts[lang]['interactive_map']:
         
         # Language selection and year/topic/indicator/column selection
         year = st.sidebar.selectbox(texts[lang]['select_year'], options=get_years())
-        topic = st.sidebar.selectbox("Select Topic", options=get_topics(year))
+        topics = list_topics(year, lang)
+        topic = st.sidebar.selectbox(texts[lang]['select_topic'], options=topics)
         indicator = st.sidebar.selectbox("Select Indicator", options=get_indicators(year, topic, "Education" if lang == "English" else "Educação"))
         df = load_csv(year, topic, "Education" if lang == "English" else "Educação", indicator)
         column = st.sidebar.selectbox("Select Column", options=df.columns)
