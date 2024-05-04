@@ -398,7 +398,7 @@ if page == texts[lang]['interactive_map']:
         year = st.selectbox(texts[lang]['select_year'], get_years())
         topics = list_topics(year, lang)
         topic = st.selectbox(texts[lang]['select_topic'], [t[0] for t in topics])
-        selected_code = next(code for name, code in topics if name == topic_choice)  # Get code by name
+        selected_code = code for name, code in topics if name == topic_choice  # Get code by name
         topic_path = os.path.join(base_path, selected_year, selected_code, topic_choice)
         
         # Display indicators based on the chosen topic and year
