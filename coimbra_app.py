@@ -31,6 +31,7 @@ texts = {
         'download_data_csv': 'Download Data as .csv',
         'download_chart_png': 'Download Chart as .png',
         'select_page': 'Select a Page',
+        'select_dataframe': 'Select an Indicator to display',
         'select_year': 'Select Year',
         'select_bins': 'Select Number of Bins (Colors):',
         'show_raw_data': 'Show Raw Data',
@@ -59,7 +60,7 @@ texts = {
     },
     'pt': {
         'title': 'Mapa Interativo de Coimbra',
-        'file_processor': 'Processador de Arquivos',
+        'file_processor': 'Processador de Ficheiros',
         'interactive_map': 'Mapa Interativo',
         'district_map': 'Mapa do Distrito de Coimbra',
         'chart_generator': 'Gerador de Gráficos',
@@ -68,6 +69,7 @@ texts = {
         'download_data_csv': 'Baixar Dados como .csv',
         'download_chart_png': 'Baixar gráfico como .png',
         'select_page': 'Selecione uma Página',
+        'select_indicator': 'Selecione um Indicador para visualizar',
         'select_year': 'Selecione o Ano',
         'select_bins': 'Selecione o Número de Divisões (Cores):',
         'show_raw_data': 'Mostrar Dados Brutos',
@@ -234,7 +236,7 @@ page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor
 if page == texts[lang]['file_processor']:
     st.title(texts[lang]['file_processor'])
     uploaded_file = st.file_uploader(texts[lang]['upload_excel'], type=["xlsx"])
-    
+    processed_data = {}
     if uploaded_file is not None:
         xls = pd.ExcelFile(uploaded_file)
         
@@ -247,25 +249,32 @@ if page == texts[lang]['file_processor']:
             dfs = concatenateRowsWithinLimits(dfs, lower, upper, units)
             dfs = replaceNewlineWithSpace(dfs)
             dfs = refineHeaders(dfs)
-            dfs = addMultiindexColumns(dfs)
+            dfs = addMultiindexColumns(dfs, lang)
             st.success('Processing Complete!')
 
             # Display each DataFrame with a download button for the CSV
             for (pt_title, en_title), df in dfs.items():
-                st.subheader(f'DataFrame: {en_title}')
+                title = pt_title if lang == 'pt' else en_title
+                st.subheader(f'DataFrame: {title}')
                 st.dataframe(df)
+                
+                processed_data[(pt_title, en_title)] = df
+                
+                # Store DataFrame in session state
+                st.session_state['processed_data'] = processed_data
 
                 # Convert DataFrame to CSV, ensure index is included if it needs to be preserved
                 csv = df.to_csv(index=True).encode('utf-8-sig')  # Ensure index is included if needed
                 st.download_button(
-                    label=f"Download {en_title.replace('/', '_')}.csv",
+                    label=f"Download {title.replace('/', '_')}.csv",
                     data=csv,
-                    file_name=f"{en_title.replace('/', '_')}.csv",
+                    file_name=f"{title.replace('/', '_')}.csv",
                     mime='text/csv'
                 )
 
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
+
 
 if page == texts[lang]['interactive_map']:
     st.title(texts[lang]['interactive_map'])
@@ -297,11 +306,26 @@ if page == texts[lang]['interactive_map']:
         if show_3d:
             elevation_scale = st.slider(texts[lang]['elevation_scale'], 1, 500, 100)
 
-    # Load data
-    df_path = f'tables/{year}.xlsx'
-    df = pd.read_excel(df_path)
-    column_names = df.columns.tolist()[5:]
-    column_name = st.selectbox(texts[lang]['select_column'], column_names)
+    # Check if processed data is available in session state
+    if 'processed_data' in st.session_state and st.session_state['processed_data']:
+        # Create a list of titles based on the language
+        titles = [(k[0] if lang == 'pt' else k[1]) for k in st.session_state['processed_data'].keys()]
+        selected_title = st.selectbox(texts[lang]['select_indicator'], titles)
+
+        # Reverse lookup to get the tuple key from the selected title
+        selected_key = next(k for k in st.session_state['processed_data'].keys() if selected_title in k)
+            
+        # Get the DataFrame associated with the selected key
+        df = st.session_state['processed_data'][selected_key]
+        #st.write(f"Displaying data for: {selected_title}")        
+    else:
+        # Load data
+        df_path = f'tables/{year}.xlsx'
+        df = pd.read_excel(df_path)
+        
+    if df is not None:
+        column_names = df.columns.tolist()
+        column_name = st.selectbox(texts[lang]['select_column'], column_names)
 
     # Load and prepare geographical data based on selected level
     if level == "Municipal":
@@ -344,7 +368,7 @@ if page == texts[lang]['interactive_map']:
     if included_units:
         gdf = gdf[gdf[geo_column].isin(included_units)]
 
-    merged = gdf.merge(df, how='left', left_on=geo_column, right_on='Border')
+    merged = gdf.merge(df, how='left', left_on=geo_column, right_on=df.columns[0])
 
     if show_3d:
         deck_gl = generate_3d_map(merged, column_name, elevation_scale)
@@ -377,7 +401,7 @@ if page == texts[lang]['interactive_map']:
         current_cmap = get_colormap(color_map)
 
         # Setup the GeoJson layer with conditional tooltips based on the selected level
-        tooltip_fields = ['Border', column_name]  # Tooltip shows the Border and the data column
+        tooltip_fields = [df.columns[0], column_name]  # Tooltip shows the Border and the data column
         tooltip_aliases = [level, column_name.title()]  # Alias reflects the level
 
         geojson_layer = folium.GeoJson(
