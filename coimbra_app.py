@@ -322,62 +322,7 @@ if page == texts[lang]['interactive_map']:
         df = st.session_state['processed_data'][selected_key]
         #st.write(f"Displaying data for: {selected_title}")        
     else:
-        # Assume the base path to the 'Preloaded' folder
-        base_path = "Preloaded"
-        def get_years():
-            # List directories only
-            return sorted([name for name in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, name))])
         
-        def list_topics(year, lang):
-            year_path = os.path.join(base_path, year)
-
-            # Initialize list to store topics
-            topics = []
-            # Define topic keywords based on language
-            topic_keywords = {
-                'en': {
-                    '01': 'Population',
-                    '02': 'Education',
-                    '03': 'Culture and sports',
-                    '04': 'Health',
-                    '05': 'Labour market',
-                    '06': 'Social Protection',
-                    '07': 'Income and living conditions'
-                },
-                'pt': {
-                    '01': 'População',
-                    '02': 'Educação',
-                    '03': 'Cultura e desporto',
-                    '04': 'Saúde',
-                    '05': 'Mercado de trabalho',
-                    '06': 'Proteção Social',
-                    '07': 'Rendimento e condições de vida'
-                }
-            }[lang]
-
-            for code, name in topic_keywords.items():
-                topic_path = Path(year_path) / code
-                if topic_path.exists() and name in os.listdir(topic_path):
-                    topics.append(name)
-            return sorted(topics)
-        
-        def get_indicators(year, topic, lang):
-            topic_path = Path(base_path) / year / topic
-            return sorted([f.name for f in topic_path.glob('*.csv')])
-        
-        def load_data(file_path):
-            return pd.read_csv(file_path)
-
-        # Streamlit widgets to select year, topic, and indicator
-        year = st.sidebar.selectbox("Select Year", get_years())
-        topics = list_topics(year, st.session_state['lang'])
-        topic = st.sidebar.selectbox("Select Topic", topics)
-        indicators = get_indicators(year, topic, st.session_state['lang'])
-        selected_indicator = st.sidebar.selectbox("Select Indicator", indicators)
-        
-        # Load the selected data
-        data_path = Path(base_path) / year / topic / selected_indicator
-        df = load_data(data_path)
 
     if df is not None:
         column_names = df.columns.tolist()
