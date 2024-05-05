@@ -15,9 +15,9 @@ import leafmap.foliumap as leafmap
 import leafmap.colormaps as cm
 import seaborn as sns
 import pydeck as pdk
+from pathlib import Path
 from locations import portugal_geo_structure 
 from preprocess import generateDataframes, replaceNewlineWithSpace, addMultiindexColumns, fillRowsInRangeForAll, find_limits_for_all, concatenateRowsWithinLimits, refineHeaders
-from pathlib import Path
 
 # Language dictionaries
 texts = {
@@ -36,6 +36,9 @@ texts = {
         'select_year': 'Select Year',
         'select_topic': 'Select a Topic to explore',
         'select_bins': 'Select Number of Bins (Colors):',
+        'select_areas' : 'Select Areas',
+        'select_regions' : 'Select Regions',
+        'select_levels': "Select {level}s to Include:",
         'show_raw_data': 'Show Raw Data',
         'select_geographical_level': 'Select Geographical Level',
         'show_3d_view': 'Show 3D View',
@@ -75,6 +78,9 @@ texts = {
         'select_topic': 'Selecione o Tópico que deseja explorar',
         'select_year': 'Selecione o Ano',
         'select_bins': 'Selecione o Número de Divisões (Cores):',
+        'select_areas' : 'Selecione as Areas',
+        'select_regions' : 'Selecione as Regioes',
+        'select_levels': "Selecione a nivel {level} o que deseja explorar:",
         'show_raw_data': 'Mostrar Tabela de Dados',
         'select_geographical_level': 'Selecione o Nível Geográfico',
         'show_3d_view': 'Mostrar Vista 3D',
@@ -146,31 +152,6 @@ def plot_bar_chart(df, geo_column, column, color_map, title=None, axis_orientati
     plt.tight_layout()
 
     return plt.gcf()
-
-# Function to create a Pydeck 3D visualization
-def generate_3d_map(geo_data_frame, column_name, elevation_scale):
-    geo_data_frame['elevation'] = pd.to_numeric(geo_data_frame[column_name], errors='coerce') * elevation_scale
-    layer = pdk.Layer(
-        "GeoJsonLayer",
-        geo_data_frame,
-        opacity=0.8,
-        stroked=False,
-        filled=True,
-        extruded=True,
-        wireframe=True,
-        get_elevation="elevation",
-        get_fill_color="[200, 100, 100]",
-        get_line_color="[255, 255, 255, 255]"
-    )
-
-    view_state = pdk.ViewState(
-        latitude=geo_data_frame.geometry.centroid.y.mean(),
-        longitude=geo_data_frame.geometry.centroid.x.mean(),
-        zoom=10,
-        pitch=45
-    )
-
-    return pdk.Deck(layers=[layer], initial_view_state=view_state, map_style='mapbox://styles/mapbox/light-v9')
 
 def load_data():
     return pd.read_excel('./tables/CENSUS_2021.xlsx') 
@@ -283,15 +264,16 @@ if page == texts[lang]['interactive_map']:
     st.title(texts[lang]['interactive_map'])
 
     # Create columns for controls
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
-        year = st.slider(texts[lang]['select_year'], 2020, 2023, key='year_slider')
         num_bins = st.select_slider(
             texts[lang]['select_bins'],
             options=[0, 2, 3, 4, 5, 6, 7, 8, 9],
             format_func=lambda x: 'Auto' if x == 0 else str(x)
         )
+        show_bar_chart = st.checkbox(texts[lang]['show_bar_chart'], key='show_bar_chart')
+        show_raw_data = st.checkbox(texts[lang]['show_raw_data'], key='show_raw_data_checkbox')
 
     with col2:
         level = st.radio(texts[lang]['select_geographical_level'], ["Municipal", "Regional"], key='geo_level')
@@ -300,14 +282,6 @@ if page == texts[lang]['interactive_map']:
             options=["Warm Sunset", "Viridis", "Plasma", "Inferno", "Cividis", "Blues", "Purples"],
             index=0  # Default to "Warm Sunset"
         )
-        
-    with col3:
-        show_bar_chart = st.checkbox(texts[lang]['show_bar_chart'], key='show_bar_chart')
-        show_raw_data = st.checkbox(texts[lang]['show_raw_data'], key='show_raw_data_checkbox')
-        show_3d = st.checkbox(texts[lang]['show_3d_view'])
-        
-        if show_3d:
-            elevation_scale = st.slider(texts[lang]['elevation_scale'], 1, 500, 100)
 
     # Check if processed data is available in session state
     if 'processed_data' in st.session_state and st.session_state['processed_data']:
@@ -322,8 +296,68 @@ if page == texts[lang]['interactive_map']:
         df = st.session_state['processed_data'][selected_key]
         #st.write(f"Displaying data for: {selected_title}")        
     else:
-        
+        # Assume the base path to the 'Preloaded' folder
+        # Set the base path to the 'Preloaded' folder
+        base_path = Path("Preloaded")
 
+        def get_years():
+            return sorted([name for name in os.listdir(base_path) if os.path.isdir(base_path / name)])
+
+        def list_topics(year, lang):
+            year_path = base_path / year
+
+            # Define topic keywords based on language
+            topic_keywords = {
+                'en': [
+                    'Population',
+                    'Education',
+                    'Culture and sports',
+                    'Health',
+                    'Labour market',
+                    'Social Protection',
+                    'Income and living conditions'
+                ],
+                'pt': [
+                    'População',
+                    'Educação',
+                    'Cultura e desporto',
+                    'Saúde',
+                    'Mercado de trabalho',
+                    'Proteção Social',
+                    'Rendimento e condições de vida'
+                ]
+            }[lang]
+
+            # List only directories that match the topic keywords for the selected language
+            topics = [d.name for d in year_path.iterdir() if d.is_dir() and d.name in topic_keywords]
+            return sorted(topics)
+
+        def get_indicators(year, topic):
+            topic_path = base_path / year / topic
+            return sorted([f.name for f in topic_path.glob('*.csv')])
+
+        def load_data(file_path):
+            return pd.read_csv(file_path)
+
+        # Streamlit User Interface
+        year = st.selectbox(texts[lang]['select_year'], get_years())
+        topics = list_topics(year, lang)
+        topic = st.selectbox(texts[lang]['select_topic'], topics)
+        indicators = get_indicators(year, topic)
+        selected_indicator = st.selectbox(texts[lang]['select_indicator'], indicators)
+
+        # Build the path to the selected data
+        data_path = base_path / year / topic / selected_indicator
+        st.write("Loading data from:", data_path)  # Debug statement to check the path
+
+        # Load and display the data
+        if data_path.exists():
+            df = load_data(data_path)
+            df = df.set_index(df.columns[0])
+            df.index.name = None
+        else:
+            st.error("Selected data file does not exist.")
+        
     if df is not None:
         column_names = df.columns.tolist()
         column_name = st.selectbox(texts[lang]['select_column'], column_names)
@@ -339,19 +373,19 @@ if page == texts[lang]['interactive_map']:
     # Conditional Multiselect based on selected level
     if level == "Regional":
         all_regions = list(portugal_geo_structure.keys())
-        selected_regions = st.multiselect("Select Regions:", all_regions)
+        selected_regions = st.multiselect(texts[lang]['select_areas'], all_regions)
         next_level_options = []
         for region in selected_regions:
             next_level_options.extend(portugal_geo_structure[region].keys())
     elif level == "Municipal":
         all_regions = list(portugal_geo_structure.keys())
-        selected_regions = st.multiselect("Select Regions:", all_regions)
+        selected_regions = st.multiselect(texts[lang]['select_areas'], all_regions)
         district_options = []
         for region in selected_regions:
             for district in portugal_geo_structure[region].keys():
                 district_options.append(district)
         # For Municipal level, change multiselect to "Select District"
-        selected_districts = st.multiselect("Select Districts:", sorted(set(district_options)))
+        selected_districts = st.multiselect(texts[lang]['select_regions'], sorted(set(district_options)))
         next_level_options = []
         for district in selected_districts:
             for region in selected_regions:
@@ -359,7 +393,8 @@ if page == texts[lang]['interactive_map']:
                     next_level_options.extend(portugal_geo_structure[region][district])
 
     # Multiselect for including districts or municipalities
-    included_units = st.multiselect(f"Select {level}s to Include:", sorted(set(next_level_options)))
+    #included_units = st.multiselect(f"Select {level}s to Include:", sorted(set(next_level_options)))
+    included_units = st.multiselect(texts[lang]['select_levels'].format(level=level), sorted(set(next_level_options)))
 
     # Load and filter geographical data
     geo_data_path = './maps/municipal.shp' if level == "Municipal" else './maps/district.shp'
@@ -373,68 +408,64 @@ if page == texts[lang]['interactive_map']:
 
     merged = gdf.merge(df, how='left', left_on=geo_column, right_on='Border')
 
-    if show_3d:
-        deck_gl = generate_3d_map(merged, column_name, elevation_scale)
-        st.pydeck_chart(deck_gl)
+    # Ensure the data for the selected column is numeric and handle NaNs
+    merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
+    merged.fillna(0, inplace=True)
+    m = leafmap.Map(center=[40.2056, -8.4196], zoom_start=10)
+
+    # Calculate the color bins for the map
+    if num_bins > 0:
+        bin_edges = calculate_quantile_bins(merged[column_name], num_bins)
     else:
-        # Ensure the data for the selected column is numeric and handle NaNs
-        merged[column_name] = pd.to_numeric(merged[column_name], errors='coerce')
-        merged.fillna(0, inplace=True)
-        m = leafmap.Map(center=[40.2056, -8.4196], zoom_start=10)
+        bin_edges = calculate_quantile_bins(merged[column_name])
 
-        # Calculate the color bins for the map
-        if num_bins > 0:
-            bin_edges = calculate_quantile_bins(merged[column_name], num_bins)
-        else:
-            bin_edges = calculate_quantile_bins(merged[column_name])
+    def get_colormap(cmap_name):
+        cmap_dict = {
+            "Warm Sunset (YlOrRd)": plt.get_cmap('YlOrRd'),
+            "Viridis": plt.get_cmap('viridis'),
+            "Plasma": plt.get_cmap('plasma'),
+            "Inferno": plt.get_cmap('inferno'),
+            "Cividis": plt.get_cmap('cividis'),
+            "Blues": plt.get_cmap('Blues'),
+            "Purples": plt.get_cmap('Purples')
+        }
+        return cmap_dict.get(cmap_name, plt.get_cmap('YlOrRd'))
 
-        def get_colormap(cmap_name):
-            cmap_dict = {
-                "Warm Sunset (YlOrRd)": plt.get_cmap('YlOrRd'),
-                "Viridis": plt.get_cmap('viridis'),
-                "Plasma": plt.get_cmap('plasma'),
-                "Inferno": plt.get_cmap('inferno'),
-                "Cividis": plt.get_cmap('cividis'),
-                "Blues": plt.get_cmap('Blues'),
-                "Purples": plt.get_cmap('Purples')
-            }
-            return cmap_dict.get(cmap_name, plt.get_cmap('YlOrRd'))
+    # When applying styles in folium:
+    current_cmap = get_colormap(color_map)
 
-        # When applying styles in folium:
-        current_cmap = get_colormap(color_map)
+    # Setup the GeoJson layer with conditional tooltips based on the selected level
+    tooltip_fields = ['Border', column_name]  # Tooltip shows the Border and the data column
+    tooltip_aliases = [level, column_name.title()]  # Alias reflects the level
 
-        # Setup the GeoJson layer with conditional tooltips based on the selected level
-        tooltip_fields = ['Border', column_name]  # Tooltip shows the Border and the data column
-        tooltip_aliases = [level, column_name.title()]  # Alias reflects the level
+    geojson_layer = folium.GeoJson(
+        data=merged.__geo_interface__,
+        style_function=lambda feature: {
+            'fillColor': get_color(feature['properties'][column_name], bin_edges, current_cmap) if feature['properties'][column_name] is not None else "transparent",
+            'color': 'black',
+            'weight': 0.5,
+            'dashArray': '5, 5',
+            'fillOpacity': 0.6,
+        },
+        tooltip=folium.GeoJsonTooltip(
+            fields=tooltip_fields,
+            aliases=tooltip_aliases,
+            style=("background-color: white; color: #333333; font-family: Arial; font-size: 12px; padding: 3px;")
+        )
+    ).add_to(m)
 
-        geojson_layer = folium.GeoJson(
-            data=merged.__geo_interface__,
-            style_function=lambda feature: {
-                'fillColor': get_color(feature['properties'][column_name], bin_edges, current_cmap) if feature['properties'][column_name] is not None else "transparent",
-                'color': 'black',
-                'weight': 0.5,
-                'dashArray': '5, 5',
-                'fillOpacity': 0.6,
-            },
-            tooltip=folium.GeoJsonTooltip(
-                fields=tooltip_fields,
-                aliases=tooltip_aliases,
-                style=("background-color: white; color: #333333; font-family: Arial; font-size: 12px; padding: 3px;")
-            )
-        ).add_to(m)
+    # Layout for map and legend
+    col_map, col_legend = st.columns([9, 1])
+    with col_map:
+        m.to_streamlit(height=700)
 
-        # Layout for map and legend
-        col_map, col_legend = st.columns([9, 1])
-        with col_map:
-            m.to_streamlit(height=700)
-
-        with col_legend:
-            fig, ax = plt.subplots(figsize=(2, 6))
-            cmap = current_cmap
-            norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
-            colorbar = mcolorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation='vertical')
-            colorbar.set_label(f"{column_name.replace('_', ' ').title()}", size=12)
-            st.pyplot(fig)
+    with col_legend:
+        fig, ax = plt.subplots(figsize=(2, 6))
+        cmap = current_cmap
+        norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
+        colorbar = mcolorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation='vertical')
+        colorbar.set_label(f"{column_name.replace('_', ' ').title()}", size=8)
+        st.pyplot(fig)
 
 
 
