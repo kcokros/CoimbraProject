@@ -49,7 +49,7 @@ texts = {
         'select_data_source': 'Select Data Source',
         'census_data': 'Census 2021 Data',
         'upload_csv': 'Upload your dataset in CSV format',
-        'choose_bar_orientationn':  'Choose bar chart orientation',
+        'choose_bar_orientation':  'Choose bar chart orientation',
         'enter_custom_title': 'Enter a custom title for the chart (leave blank for default):',
         'enter_x_axis_label':'Enter X Axis Label',
         'enter_y_axis_label':'Enter Y Axis Label',
@@ -94,7 +94,7 @@ texts = {
         'select_data_source': 'Selecione a Fonte de Dados',
         'census_data': 'Dados do Censo 2021',
         'upload_csv': 'Carregue o seu conjunto de dados em formato CSV',
-        'choose_bar_orientationn':  'Escolha a orientação do gráfico',
+        'choose_bar_orientation':  'Escolha a orientação do gráfico',
         'enter_custom_title': 'Personalize o título do gráfico (deixe em branco para o padrão):',
         'enter_x_axis_label':'Personalize a legenda do eixo X',
         'enter_y_axis_label':'Personalize a legenda do eixo Y',
@@ -477,7 +477,7 @@ if page == texts[lang]['interactive_map']:
 
     # After the map display code
     if show_bar_chart:
-        axis_orientation = st.selectbox("Choose Bar Chart Orientation", ['vertical', 'horizontal'], index=0)
+        axis_orientation = st.selectbox(texts[lang]['choose_bar_orientation'], ['vertical', 'horizontal'], index=0)
         custom_bar_chart_title = st.text_input(texts[lang]['enter_custom_title'], "")
         custom_x_label = st.text_input(texts[lang]['enter_x_axis_label'], "")
         custom_y_label = st.text_input(texts[lang]['enter_y_axis_label'], "")
