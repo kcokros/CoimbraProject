@@ -473,7 +473,24 @@ if page == texts[lang]['interactive_map']:
         colorbar.set_label(f"{column_name.replace('_', ' ').title()}", size=8)
         st.pyplot(fig)
 
+    # Saving the map and legend as png
+    if st.button('Save Map and Legend as .png'):
+        # Save the map
+        map_png = m._to_png()
+        map_path = "map.png"
+        with open(map_path, "wb") as map_file:
+            map_file.write(map_png)
+        st.success("Map saved as map.png")
 
+        # Save the legend
+        legend_path = "legend.png"
+        fig.savefig(legend_path, format='png')
+        st.success("Legend saved as legend.png")
+
+    # Saving the map and legend as html
+    if st.button('Save Map as .html'):
+        map_html = './map.html'
+        m.save(map_html)
 
     # After the map display code
     if show_bar_chart:
