@@ -185,7 +185,15 @@ def parse_row_input(row_input, df_length):
                 idx = df_length + idx
             rows.append(idx)
     return sorted(set(rows))
-
+    
+# Function to convert data to a downloadable link
+def get_image_download_link(img, filename, text):
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    href = f'<a href="data:image/png;base64,{img_str}" download="{filename}">{text}</a>'
+    return href
+    
 # Function to generate and display charts
 def generate_chart(data, x_col, y_col, chart_type, palette, chart_title):
     plt.figure(figsize=(15, 8))
@@ -478,24 +486,37 @@ if page == texts[lang]['interactive_map']:
         colorbar.set_label(f"{column_name.replace('_', ' ').title()}", size=8)
         st.pyplot(fig)
 
-    # Saving the map and legend as png
+    # Example button to save a map as PNG
     if st.button('Save Map and Legend as .png'):
-        # Save the map
+        # Assume m is a folium map object and fig is a matplotlib figure
         map_png = m._to_png()
         map_path = "map.png"
-        with open(map_path, "wb") as map_file:
-            map_file.write(map_png)
-        st.success("Map saved as map.png")
-
-        # Save the legend
         legend_path = "legend.png"
-        fig.savefig(legend_path, format='png')
-        st.success("Legend saved as legend.png")
-
-    # Saving the map and legend as html
+    
+        # Converting folium map to a PIL image
+        map_img = Image.open(BytesIO(map_png))
+        # Saving legend as a PIL image
+        fig_legend = fig
+        legend_buf = BytesIO()
+        fig_legend.savefig(legend_buf, format='png')
+        legend_buf.seek(0)
+        legend_img = Image.open(legend_buf)
+    
+        # Generate download links
+        st.markdown(get_image_download_link(map_img, map_path, 'Download map as PNG'), unsafe_allow_html=True)
+        st.markdown(get_image_download_link(legend_img, legend_path, 'Download legend as PNG'), unsafe_allow_html=True)
+        st.success("Download links are ready.")
+    
+    # Example button to save the map as HTML
     if st.button('Save Map as .html'):
         map_html = './map.html'
         m.save(map_html)
+        html_file = open(map_html, 'r', encoding='utf-8')
+        source_code = html_file.read()
+        b64 = base64.b64encode(source_code.encode()).decode()
+        href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download map as HTML</a>'
+        st.markdown(href, unsafe_allow_html=True)
+        st.success("HTML download link is ready.")
 
     # After the map display code
     if show_bar_chart:
