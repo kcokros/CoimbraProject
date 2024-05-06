@@ -512,16 +512,6 @@ elif page == texts[lang]['district_map']:
     with st.container():
         st.components.v1.iframe(map_url, width=None, height=720)
 
-elif page == texts[lang]['district_map']:
-    st.title(texts[lang]['district_map'])  # CHANGE: Localized title
-
-    # Define the URL for the Kepler.gl map
-    map_url = "https://kepler.gl/demo/map?mapUrl=https://dl.dropboxusercontent.com/scl/fi/t5u7fwfy8xf5zlcqsdv9s/Coolectiva.json?rlkey=fpwk2ahuwa3lzckpt076uk0h3&dl=0"
-    
-    # Create a full-width container for the iframe
-    with st.container():
-        st.components.v1.iframe(map_url, width=None, height=720)  # Set width to None for full width
-
 elif page == texts[lang]['chart_generator']:
     st.title(texts[lang]['chart_generator'])
 
