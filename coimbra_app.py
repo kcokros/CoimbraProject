@@ -70,7 +70,7 @@ texts = {
         'title': 'Mapa Interativo de Coimbra',
         'file_processor': 'Processador de Ficheiros',
         'interactive_map': 'Mapa Interativo',
-        'district_map': 'Mapa do Distrito de Coimbra',
+        'district_map': 'Mapa da Região de Coimbra',
         'chart_generator': 'Gerador de Gráficos',
         'upload_excel': 'Carregue aqui o seu ficheiro em formato Excel',
         'download_csv': 'Descarregar como CSV',
