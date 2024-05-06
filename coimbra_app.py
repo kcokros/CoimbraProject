@@ -19,9 +19,6 @@ from pathlib import Path
 from locations import portugal_geo_structure 
 from preprocess import generateDataframes, replaceNewlineWithSpace, addMultiindexColumns, fillRowsInRangeForAll, find_limits_for_all, concatenateRowsWithinLimits, refineHeaders
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 # Language dictionaries
