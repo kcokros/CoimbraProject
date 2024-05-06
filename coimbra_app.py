@@ -49,7 +49,10 @@ texts = {
         'select_data_source': 'Select Data Source',
         'census_data': 'Census 2021 Data',
         'upload_csv': 'Upload your dataset in CSV format',
+        'choose_bar_orientationn':  'Choose bar chart orientation',
         'enter_custom_title': 'Enter a custom title for the chart (leave blank for default):',
+        'enter_x_axis_label':'Enter Y Axis Label',
+        'enter_y_axis_label':'Enter Y Axis Label',
         'select_column_to_filter': 'Select Column to Filter Values (optional)',
         'select_values_to_include': 'Select Values to Include',
         'enter_row_ranges': "Enter Row Ranges (optional, e.g., '1-10, 15, 20-30, -5--1')",
@@ -91,7 +94,10 @@ texts = {
         'select_data_source': 'Selecione a Fonte de Dados',
         'census_data': 'Dados do Censo 2021',
         'upload_csv': 'Carregue o seu conjunto de dados em formato CSV',
-        'enter_custom_title': 'Insira um título personalizado para o gráfico (deixe em branco para o padrão):',
+        'choose_bar_orientationn':  'Escolha a orientação do gráfico',
+        'enter_custom_title': 'Personalize o título do gráfico (deixe em branco para o padrão):',
+        'enter_x_axis_label':'Personalize a legenda do eixo Y',
+        'enter_y_axis_label':'Personalize a legenda do eixo Y',
         'select_column_to_filter': 'Selecione a Coluna para Filtrar Valores (opcional)',
         'select_values_to_include': 'Selecione Valores para Incluir',
         'enter_row_ranges': "Insira os Intervalos de Linhas (opcional, ex.: '1-10, 15, 20-30, -5--1')",
@@ -472,9 +478,9 @@ if page == texts[lang]['interactive_map']:
     # After the map display code
     if show_bar_chart:
         axis_orientation = st.selectbox("Choose Bar Chart Orientation", ['vertical', 'horizontal'], index=0)
-        custom_bar_chart_title = st.text_input("Custom Title for Bar Chart", "")
-        custom_x_label = st.text_input("Custom X Axis Label", "")
-        custom_y_label = st.text_input("Custom Y Axis Label", "")
+        custom_bar_chart_title = st.text_input(texts[lang]['enter_custom_title'], "")
+        custom_x_label = st.text_input(texts[lang]['enter_x_axis_label'], "")
+        custom_y_label = st.text_input(texts[lang]['enter_y_axis_label'], "")
         # Get the current color map as a string suitable for matplotlib
         plt_cmap_name = {
             "Warm Sunset": "YlOrRd",
