@@ -573,17 +573,17 @@ elif page == texts[lang]['chart_generator']:
                 csv = get_csv(data)
                 st.download_button(texts[lang]['download_data_csv'], csv.getvalue(), file_name="data.csv", mime="text/csv")
 
-    # Vizzu Link
-    st.markdown(f"## {texts[lang]['advanced_chart_builder']}")
-    st.markdown(
-        f"""
-        <a href="https://vizzu-builder.streamlit.app/" target="_blank">
-            <button style="width:100%; height: 50px; color: white; background-color: #FF4B4B; border: none; border-radius: 5px; cursor: pointer;">
-                {texts[lang]['open_vizzu_builder']}
-            </button>
-        </a>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.text(texts[lang]['click_button_above'])
+        # Vizzu Link
+        st.markdown(f"## {texts[lang]['advanced_chart_builder']}")
+        st.markdown(
+            f"""
+            <a href="https://vizzu-builder.streamlit.app/" target="_blank">
+                <button style="width:100%; height: 50px; color: white; background-color: #FF4B4B; border: none; border-radius: 5px; cursor: pointer;">
+                    {texts[lang]['open_vizzu_builder']}
+                </button>
+            </a>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        st.text(texts[lang]['click_button_above'])
