@@ -25,7 +25,7 @@ texts = {
         'title': 'Interactive Map of Coimbra',
         'file_processor': 'File Processor',
         'interactive_map': 'Interactive Map',
-        'district_map': 'Coimbra District Map',
+        'district_map': 'Coimbra Region Map',
         'chart_generator': 'Chart Generator',
         'upload_excel': 'Upload your Excel file',
         'download_csv': 'Download as CSV',
