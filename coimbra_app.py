@@ -165,7 +165,7 @@ def load_data():
     if st.session_state['lang'] == 'pt':
         return pd.read_excel('./tables/CENSUS_2021.xlsx')  # Assuming you have a separate file for Portuguese
     else:
-        return pd.read_excel('./tables/CENSUS_2021_EN.xlsx')  # Assuming you have a separate file for English
+        return pd.read_excel('./tables/CENSUS_2021_ENG.xlsx')  # Assuming you have a separate file for English
 
 # Function to parse row input for selecting rows
 def parse_row_input(row_input, df_length):
