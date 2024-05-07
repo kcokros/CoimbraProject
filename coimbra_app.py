@@ -163,9 +163,9 @@ def plot_bar_chart(df, geo_column, column, color_map, title=None, axis_orientati
 
 def load_data():
     if st.session_state['lang'] == 'pt':
-        return pd.read_excel('./tables/CENSUS_2021.xlsx')  # Assuming you have a separate file for Portuguese
+        return pd.read_csv('./tables/CENSUS_2021.csv')  # Assuming you have a separate file for Portuguese
     else:
-        return pd.read_excel('./tables/CENSUS_2021_ENG.xlsx')  # Assuming you have a separate file for English
+        return pd.read_csv('./tables/CENSUS_2021_ENG.csv')  # Assuming you have a separate file for English
 
 # Function to parse row input for selecting rows
 def parse_row_input(row_input, df_length):
