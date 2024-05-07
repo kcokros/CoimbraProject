@@ -25,25 +25,13 @@ To set up and run the application locally:
 
 1.  Clone the repository:
 
-    sh
-
-    Copy code
-
     `git clone https://github.com/your-repository/coimbra_app.git`
 
 2.  Navigate to the project directory:
 
-    sh
-
-    Copy code
-
     `cd coimbra_app`
 
 3.  Install dependencies:
-
-    sh
-
-    Copy code
 
     `pip install -r requirements.txt`
 
@@ -51,10 +39,6 @@ Usage
 -----
 
 Run the application using Streamlit:
-
-sh
-
-Copy code
 
 `streamlit run coimbra_app.py`
 
@@ -73,7 +57,6 @@ Contributing
 
 We welcome contributions to enhance the application's functionalities or documentation. Please fork the repository and submit a pull request with your changes. Major changes should be discussed via an issue first.
 
-License
--------
+## Course Information
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is part of the coursework for the University of Manchester's Data Science program, specifically for the course titled "Applying Data Science."
