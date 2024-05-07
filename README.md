@@ -8,15 +8,15 @@ This repository hosts the source code for an interactive web-based mapping and d
 
 Folder and File Structure
 -------------------------
-Preloaded/                 # Contains preloaded data files from INE.pt ()
-_pycache_/                 # Python cache files from local.
-maps/                      # Geographic data files.
-tables/                    # CSV files from https://www.ine.pt/xportal/xmain?xpgid=ine_main&xpid=INE
-coimbra_app.py             # Main application file for running the Streamlit web app.
-locations.py               # Defines geographic structure and locations data.
-preprocess.py              # Contains data preprocessing functions.
-requirements.txt           # Required libraries for the project.
-README.md                  # The file you are currently reading.
+- **Preloaded/** - Contains preloaded data files from [INE.pt](https://www.ine.pt/xportal/xmain?xpid=INE&xpgid=ine_doc_municipios)
+- **_pycache_/** - Python cache files from local execution.
+- **maps/** - Geographic data files.
+- **tables/** - CSV files from [INE](https://www.ine.pt/xportal/xmain?xpgid=ine_main&xpid=INE).
+- **coimbra_app.py** - Main application file for running the Streamlit web app.
+- **locations.py** - Defines geographic structure and locations data.
+- **preprocess.py** - Contains data preprocessing functions.
+- **requirements.txt** - Required libraries for the project.
+- **README.md** - The file you are currently reading.
 
 Installation
 ------------
