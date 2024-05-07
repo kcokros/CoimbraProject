@@ -560,34 +560,57 @@ elif page == texts[lang]['chart_generator']:
 
     data_source = st.radio(texts[lang]['select_data_source'], [texts[lang]['census_data'], texts[lang]['upload_csv']])
     data = None
+    is_csv_data = False 
+
     if data_source == texts[lang]['upload_csv']:
         uploaded_file = st.file_uploader(texts[lang]['upload_csv'], type=["csv"])
         if uploaded_file is not None:
             data = pd.read_csv(uploaded_file)
+            is_csv_data = True
     else:
         data = load_data()
 
     if data is not None:
         custom_title = st.text_input(texts[lang]['enter_custom_title'])
-        
+
         filter_col = st.selectbox(texts[lang]['select_column_to_filter'], [""] + data.columns.tolist())
         if filter_col:
             unique_values = data[filter_col].dropna().unique()
             selected_values = st.multiselect(texts[lang]['select_values_to_include'], options=unique_values)
             data = data[data[filter_col].isin(selected_values)] if selected_values else data
 
-        row_input = st.text_input(texts[lang]['enter_row_ranges'])
-        if row_input:
-            selected_rows = parse_row_input(row_input, len(data))
-            data = data.iloc[selected_rows]
-
         if not data.empty:
             chart_type = st.selectbox(texts[lang]['select_chart_type'], ["Bar Chart", "Line Chart"])
             columns = data.columns.tolist()
-            x_col = st.selectbox(texts[lang]['select_x_axis_variable'], columns, index=0)
-            y_col = st.selectbox(texts[lang]['select_y_axis_variable'], columns, index=1)
+            # Adjust column selection based on data source
+            if is_csv_data:
+                x_col = st.selectbox(texts[lang]['select_x_axis_variable'], data.columns.tolist(), index=0)
+                y_col = st.selectbox(texts[lang]['select_y_axis_variable'], data.columns.tolist(), index=1)
+            else:
+                # Apply restrictions for data loaded with load_data()
+                x_col_options = data.columns.tolist()[:10]  # First 10 columns for x-axis
+                y_col_options = data.columns.tolist()[10:] if len(data.columns) > 10 else data.columns.tolist() 
+                x_col = st.selectbox(texts[lang]['select_x_axis_variable'], x_col_options, index=0)
+                y_col = st.selectbox(texts[lang]['select_y_axis_variable'], y_col_options, index=0)
+
+            # Show row input only for specific x-axis columns
+            if x_col in ["DTMN21", "DTMNFR21", "DTMNFRSEC21", "SECNUM21", "SSNUM21", "SECSSNUM21", "SUBSECCAO"]:
+                row_input = st.text_input(texts[lang]['enter_row_ranges'])
+                if row_input:
+                    selected_rows = parse_row_input(row_input, len(data))
+                    data = data.iloc[selected_rows]
+
+            # Allow the user to select the type of aggregation
+            aggregation_type = st.radio("Select Aggregation Type", ['Sum', 'Average'])
+            if aggregation_type == 'Sum':
+                data = data.groupby(x_col)[y_col].sum().reset_index()
+            elif aggregation_type == 'Average':
+                data = data.groupby(x_col)[y_col].mean().reset_index()
             palette = st.selectbox(texts[lang]['select_color_palette'], sns.palettes.SEABORN_PALETTES.keys(), index=3)
-            
+
+            # Sort the data based on y-axis values in descending order
+            data = data.sort_values(by=y_col, ascending=False)
+
             if st.button(texts[lang]['generate_chart']):
                 buf = generate_chart(data, x_col, y_col, chart_type, palette, custom_title)
                 st.download_button(texts[lang]['download_chart_png'], buf.getvalue(), file_name="chart.png", mime="image/png")
