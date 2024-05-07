@@ -582,7 +582,7 @@ elif page == texts[lang]['chart_generator']:
             data = data.iloc[selected_rows]
 
         if not data.empty:
-            chart_type = st.selectbox(texts[lang]['select_chart_type'], ["Bar Chart", "Line Chart", "Other"])
+            chart_type = st.selectbox(texts[lang]['select_chart_type'], ["Bar Chart", "Line Chart"])
             columns = data.columns.tolist()
             x_col = st.selectbox(texts[lang]['select_x_axis_variable'], columns, index=0)
             y_col = st.selectbox(texts[lang]['select_y_axis_variable'], columns, index=1)
