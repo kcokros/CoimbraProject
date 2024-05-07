@@ -155,7 +155,7 @@ def plot_bar_chart(df, geo_column, column, color_map, title=None, axis_orientati
         plt.ylabel(geo_column)
         plt.xlabel(column)
 
-    plt.title(title if title else f"Bar Chart of {column} by {geo_column}")
+    plt.title(title if title else f"{column} by {geo_column}")
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
 
