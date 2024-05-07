@@ -55,6 +55,9 @@ texts = {
         'enter_custom_title': 'Enter a custom title for the chart (leave blank for default):',
         'enter_x_axis_label':'Enter X Axis Label',
         'enter_y_axis_label':'Enter Y Axis Label',
+        'select_aggregation_type': 'Select Aggregation Type',
+        'sum': 'Sum',
+        'average': 'Average',
         'select_column_to_filter': 'Select Column to Filter Values (optional)',
         'select_values_to_include': 'Select Values to Include',
         'enter_row_ranges': "Enter Row Ranges (optional, e.g., '1-10, 15, 20-30, -5--1')",
@@ -106,6 +109,9 @@ texts = {
         'select_chart_type': 'Selecione o Tipo de Gráfico',
         'select_x_axis_variable': 'Selecione a Variável do Eixo X',
         'select_y_axis_variable': 'Selecione a Variável do Eixo Y',
+        'select_aggregation_type': 'Selecione o tipo de agregação desejado',
+        'sum': 'Soma',
+        'average': 'Média',
         'select_color_palette': 'Selecione a Paleta de Cores',
         'generate_chart': 'Gerar Gráfico',
         'advanced_chart_builder': 'Construtor Avançado de Gráficos',
@@ -601,10 +607,12 @@ elif page == texts[lang]['chart_generator']:
                     data = data.iloc[selected_rows]
 
             # Allow the user to select the type of aggregation
-            aggregation_type = st.radio("Select Aggregation Type", ['Sum', 'Average'])
-            if aggregation_type == 'Sum':
+            aggregation_types = [texts[lang]['sum'], texts[lang]['average']]
+            aggregation_type = st.radio(texts[lang]['select_aggregation_type'], aggregation_types)
+            
+            if aggregation_type == texts[lang]['sum']:
                 data = data.groupby(x_col)[y_col].sum().reset_index()
-            elif aggregation_type == 'Average':
+            elif aggregation_type == texts[lang]['average']:
                 data = data.groupby(x_col)[y_col].mean().reset_index()
             palette = st.selectbox(texts[lang]['select_color_palette'], sns.palettes.SEABORN_PALETTES.keys(), index=3)
 
