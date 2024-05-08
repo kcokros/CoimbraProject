@@ -321,7 +321,6 @@ if page == texts[lang]['interactive_map']:
         df = st.session_state['processed_data'][selected_key]
         #st.write(f"Displaying data for: {selected_title}")        
     else:
-        # Assume the base path to the 'Preloaded' folder
         # Set the base path to the 'Preloaded' folder
         base_path = Path("Preloaded")
 
@@ -494,7 +493,6 @@ if page == texts[lang]['interactive_map']:
 
     # Example button to save a map as PNG
     if st.button('Save Map and Legend as .png'):
-        # Assume m is a folium map object and fig is a matplotlib figure
         map_png = m._to_png()
         map_path = "map.png"
         legend_path = "legend.png"
