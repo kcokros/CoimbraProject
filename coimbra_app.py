@@ -496,7 +496,7 @@ if page == texts[lang]['interactive_map']:
         st.pyplot(fig)
 
     # button to save a map as PNG
-    if st.button('Save Map as .png'):
+    if st.button('Save Map as .png', key='save_as_png'):
         # Convert map to PNG
         map_png = m._to_png()
         b64 = base64.b64encode(map_png).decode()
@@ -505,7 +505,7 @@ if page == texts[lang]['interactive_map']:
         st.success("PNG download link is ready.")
     
     # button to save the map as HTML
-    if st.button('Save Map as .html'):
+    if st.button('Save Map as .html', key='save_as_html'):
         map_html = './map.html'
         m.save(map_html)
         html_file = open(map_html, 'r', encoding='utf-8')
