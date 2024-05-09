@@ -485,12 +485,12 @@ if page == texts[lang]['interactive_map']:
         m.to_streamlit(height=700)
 
     with col_legend:
-        fig, ax = plt.subplots(figsize=(2, 12))
+        fig, ax = plt.subplots(figsize=(2, 10))
         fig.patch.set_alpha(0)  # Set transparency
         cmap = current_cmap
         norm = mcolors.BoundaryNorm(bin_edges, cmap.N)
         colorbar = mcolorbar.ColorbarBase(ax, cmap=cmap, norm=norm, orientation='vertical')
-        wrapped_label = textwrap.fill(column_name.replace('_', ' ').title(), width=1920)  # Adjust width as needed
+        wrapped_label = textwrap.fill(column_name.replace('_', ' ').title(), width=920)  # Adjust width as needed
         colorbar.set_label(wrapped_label, size=12)
         fig.tight_layout()
         st.pyplot(fig)
