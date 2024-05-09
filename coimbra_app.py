@@ -495,25 +495,25 @@ if page == texts[lang]['interactive_map']:
         fig.tight_layout()
         st.pyplot(fig)
 
-    # Example button to save a map as PNG
-    if st.button('Save Map and Legend as .png'):
+    # button to save a map as PNG
+    if st.button('Save Map as .png'):
+        # Convert map to PNG
         map_png = m._to_png()
-        map_path = "map.png"
-        legend_path = "legend.png"
+        b64 = base64.b64encode(map_png).decode()
+        href = f'<a href="data:image/png;base64,{b64}" download="map.png">Download map as PNG</a>'
+        st.markdown(href, unsafe_allow_html=True)
+        st.success("PNG download link is ready.")
     
-        # Converting folium map to a PIL image
-        map_img = Image.open(BytesIO(map_png))
-        # Saving legend as a PIL image
-        fig_legend = fig
-        legend_buf = BytesIO()
-        fig_legend.savefig(legend_buf, format='png')
-        legend_buf.seek(0)
-        legend_img = Image.open(legend_buf)
-    
-        # Generate download links
-        st.markdown(get_image_download_link(map_img, map_path, 'Download map as PNG'), unsafe_allow_html=True)
-        st.markdown(get_image_download_link(legend_img, legend_path, 'Download legend as PNG'), unsafe_allow_html=True)
-        st.success("Download links are ready.")
+    # button to save the map as HTML
+    if st.button('Save Map as .html'):
+        map_html = './map.html'
+        m.save(map_html)
+        html_file = open(map_html, 'r', encoding='utf-8')
+        source_code = html_file.read()
+        b64 = base64.b64encode(source_code.encode()).decode()
+        href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download map as HTML</a>'
+        st.markdown(href, unsafe_allow_html=True)
+        st.success("HTML download link is ready.")
     
     # Example button to save the map as HTML
     if st.button('Save Map as .html'):
