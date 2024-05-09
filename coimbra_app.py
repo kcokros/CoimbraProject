@@ -514,17 +514,6 @@ if page == texts[lang]['interactive_map']:
         href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download map as HTML</a>'
         st.markdown(href, unsafe_allow_html=True)
         st.success("HTML download link is ready.")
-    
-    # Example button to save the map as HTML
-    if st.button('Save Map as .html'):
-        map_html = './map.html'
-        m.save(map_html)
-        html_file = open(map_html, 'r', encoding='utf-8')
-        source_code = html_file.read()
-        b64 = base64.b64encode(source_code.encode()).decode()
-        href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download map as HTML</a>'
-        st.markdown(href, unsafe_allow_html=True)
-        st.success("HTML download link is ready.")
 
     # After the map display code
     if show_bar_chart:
@@ -547,7 +536,7 @@ if page == texts[lang]['interactive_map']:
         
         # Generate the bar chart with a custom or default title
         chart_fig = plot_bar_chart(merged, geo_column, column_name, plt_cmap_name, custom_bar_chart_title.strip() or None, axis_orientation)
-        st.pyplot(chart_fig)
+        st.pyplot(chart_fig, transparent=True)
 
     if show_raw_data:
         selected_columns = st.multiselect("Select columns to display:", df.columns.tolist(), default=df.columns.tolist())
