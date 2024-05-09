@@ -193,14 +193,6 @@ def parse_row_input(row_input, df_length):
             rows.append(idx)
     return sorted(set(rows))
     
-# Function to convert data to a downloadable link
-def get_image_download_link(img, filename, text):
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    href = f'<a href="data:image/png;base64,{img_str}" download="{filename}">{text}</a>'
-    return href
-    
 # Function to generate and display charts
 def generate_chart(data, x_col, y_col, chart_type, palette, chart_title):
     plt.figure(figsize=(15, 8))
@@ -496,13 +488,13 @@ if page == texts[lang]['interactive_map']:
         st.pyplot(fig)
 
     # button to save a map as PNG
-    if st.button('Save Map as .png', key='save_as_png'):
-        # Convert map to PNG
-        map_png = m._to_png()
-        b64 = base64.b64encode(map_png).decode()
-        href = f'<a href="data:image/png;base64,{b64}" download="map.png">Download map as PNG</a>'
-        st.markdown(href, unsafe_allow_html=True)
-        st.success("PNG download link is ready.")
+    #if st.button('Save Map as .png', key='save_as_png'):
+    #    # Convert map to PNG
+    #    map_png = m._to_png()
+    #    b64 = base64.b64encode(map_png).decode()
+    #    href = f'<a href="data:image/png;base64,{b64}" download="map.png">Download map as PNG</a>'
+    #    st.markdown(href, unsafe_allow_html=True)
+    #    st.success("PNG download link is ready.")
     
     # button to save the map as HTML
     if st.button('Save Map as .html', key='save_as_html'):
