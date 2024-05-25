@@ -1,6 +1,6 @@
 Coimbra Coolectiva Mapping Tool
 ===============================
-(deployment can be seen at [streamlit](coimbracoolectiva.streamlit.app))
+(deployment can be seen at [streamlit](https://coimbracoolectiva.streamlit.app/))
 
 Overview
 --------
