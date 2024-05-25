@@ -27,6 +27,7 @@ texts = {
     'en': {
         'title': 'Interactive Map of Coimbra',
         'file_processor': 'File Processor',
+        'desc': '''You can skip this part and go straight to the "Interactive Map Menu" as this app is preloaded with data from 2019 to 2022. However, in case new data is released, you can download any .xls from [INE Municipalities Data](https://www.ine.pt/xportal/xmain?xpid=INE&xpgid=ine_doc_municipios) to be uploaded here.''',
         'interactive_map': 'Interactive Map',
         'district_map': 'Coimbra Region Map',
         'chart_generator': 'Chart Generator',
@@ -75,6 +76,7 @@ texts = {
     'pt': {
         'title': 'Mapa Interativo de Coimbra',
         'file_processor': 'Processador de Ficheiros',
+        'desc': '''Você pode pular esta parte e ir direto para o "Menu Interativo do Mapa", pois este aplicativo está pré-carregado com dados de 2019 a 2022. No entanto, caso novos dados sejam lançados, você pode baixar qualquer .xls de [Dados dos Municípios do INE](https://www.ine.pt/xportal/xmain?xpid=INE&xpgid=ine_doc_municipios) para ser carregado aqui.''',
         'interactive_map': 'Mapa Interativo',
         'district_map': 'Mapa da Região de Coimbra',
         'chart_generator': 'Gerador de Gráficos',
@@ -237,6 +239,7 @@ page = st.sidebar.radio(texts[lang]['select_page'], [texts[lang]['file_processor
 
 if page == texts[lang]['file_processor']:
     st.title(texts[lang]['file_processor'])
+    st.write(texts[lang]['desc'])
     uploaded_file = st.file_uploader(texts[lang]['upload_excel'], type=["xlsx"])
     processed_data = {}
     if uploaded_file is not None:
