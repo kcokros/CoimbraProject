@@ -1,3 +1,5 @@
+import os
+os.environ["USE_MKDOCS"] = "1"  # skip leafmap's ipyleaflet backend, use folium only
 import streamlit as st
 import pandas as pd
 import geopandas as gpd
