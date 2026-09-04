@@ -9,7 +9,6 @@ import json
 import os
 import base64
 import textwrap 
-from keplergl import KeplerGl
 import numpy as n
 import folium
 import leafmap.foliumap as leafmap
