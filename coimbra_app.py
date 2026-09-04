@@ -226,7 +226,7 @@ def get_csv(data):
 
 # Streamlit app layout
 # Display the toggle button
-st.sidebar.image("https://ibb.co.com/MxxhwhS3", use_column_width=True)
+st.sidebar.image("https://i.ibb.co.com/399s6sdL/coimbralogo.png", use_column_width=True)
 col1, col2, col3 = st.sidebar.columns([1,2,1])
 toggle_button_label = "Switch to Português" if st.session_state['lang'] == 'en' else "Switch to English"
 with col2:
